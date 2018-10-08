@@ -9,16 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="1.0.2" />
+    <PackageReference Include="Kamael.Packets" Version="1.0.0-CI-20181008-081925" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
     <PackageReference Include="PacketDotNet" Version="0.19.1" />
     <PackageReference Include="SharpPcap" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="D:\L2RKamael\L2RKamael\Packets\Kamael.Packets.csproj" />
   </ItemGroup>
 
   <ItemGroup>
