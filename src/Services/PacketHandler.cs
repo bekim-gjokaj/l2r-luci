@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using Kamael.Packets;
+using Kamael.Packets.Chat;
 using Kamael.Packets.Clan;
 using PacketDotNet;
 using SharpPcap;
@@ -52,7 +53,11 @@ namespace Luci.Services
 
                     if (l2rPacket is PacketClanMemberKillNotify)
                     {
-                        Task.Run(async () => await NotifyKill((PacketClanMemberKillNotify)l2rPacket));
+                        await Task.Run(async () => await NotifyKill((PacketClanMemberKillNotify)l2rPacket));
+                    }
+                    else if (l2rPacket is PacketChatGuildListReadResult)
+                    {
+                        await Task.Run(async () => await NotifyClanChat((PacketChatGuildListReadResult)l2rPacket));
                     }
                 }
             }
@@ -60,19 +65,42 @@ namespace Luci.Services
 
         public static async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
-            
+
             string builder = string.Format(":boom: **{0}** _*of*_  **{1}** _*killed*_  **{2}** _*of*_  **{3}** @ {4}", kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, DateTime.Now);
+            string docbuilder = string.Format(":kissing_heart: **{0}** _*of*_  **{1}** _*killed*_  **{2}** _*of*_  **{3}** @ {4}", kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, DateTime.Now);
             dictRecentKills.Add(builder);
 
             foreach (var guild in _discord.Guilds)
             {
                 foreach (var textchan in guild.TextChannels)
                 {
-                    if (textchan.Name == "pzychos-bot-test")
+                    if (textchan.Name == "pzychos-bot-test" && (kill.Clan2Name == "Legacy" || kill.ClanName == "Legacy" ))
                     {
                         await textchan.SendMessageAsync(builder);
                     }
-                } 
+                    if(kill.PlayerName == "DocHoliday" && textchan.Name == "docs-slaughterhouse")
+                    {
+                        await textchan.SendMessageAsync(docbuilder);
+                    }
+                   
+                }
+            }
+        }
+        public static async Task NotifyClanChat(PacketChatGuildListReadResult chat)
+        {
+
+            string builder = string.Format(":speech_balloon: ***{0}:\t\t*** **{1}** _\t@ {2}_", chat.PlayerName, chat.Message, DateTime.Now);
+            dictRecentKills.Add(builder);
+
+            foreach (var guild in _discord.Guilds)
+            {
+                foreach (var textchan in guild.TextChannels)
+                {
+                    if (textchan.Name == "in-game-clan-chat")
+                    {
+                        await textchan.SendMessageAsync(builder);
+                    }
+                }
             }
         }
 
