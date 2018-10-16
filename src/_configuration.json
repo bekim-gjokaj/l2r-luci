@@ -23,7 +23,7 @@
     "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "victoryformat": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "bountyformat": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "bountylistformat" : ":gift:**{0}**:star: \r\n**Desc:**_{1}_ \r\n**Reward:** _{2}_\r\n"  
+    "bountylistformat" : ":gift:**{0}**:gift: \r\n**Desc:**_{1}_ \r\n**Reward:** _{2}_\r\n\r\n"  
   },
 
   "clanchat": {
