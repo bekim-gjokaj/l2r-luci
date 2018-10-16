@@ -7,6 +7,63 @@ using static Luci.KillListService;
 
 namespace Luci.Modules
 {
+    [Name("Log")]
+    [Summary("Kill List")]
+    public class KillListModule : ModuleBase<SocketCommandContext>
+    {   /// <summary>
+        /// RECENT
+        /// </summary>
+        /// <returns></returns>
+        [Command("Recent")]
+        [Summary("Recent Kills")]
+        public async Task Recent()
+        {
+            IConfiguration _config = ConfigHelper._configuration;
+            string RecentKillList = "";
+
+            if (KillListService.KillLog.Count != 0)
+            {
+                foreach (KillListItem killItem in KillListService.KillLog)
+                {
+                    if (killItem.P1 != _config["killlist:specialname"] || killItem.P2 != _config["killlist:specialname"])
+                    {
+
+                        //Choose the KillList format for victory or defeat
+                        string RecentKillListFormat = "";
+                        if (killItem.Clan1 == _config["killlist:clanname"])
+                        {
+                            RecentKillListFormat += _config["killlist:victoryformat"] + "\r\n";
+                        }
+                        else
+                        {
+                            RecentKillListFormat += _config["killlist:defeatformat"] + "\r\n";
+                        }
+
+                        //Create formatted string for return
+                        RecentKillList += string.Format(RecentKillListFormat,
+                                    killItem.P1,
+                                    (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+                                    killItem.Clan1,
+                                    (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+                                    killItem.P2,
+                                    (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+                                    killItem.Clan2,
+                                    (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+                                    DateTime.Now);
+
+                        //Return formatted string to Discord
+                        await ReplyAsync(RecentKillList);
+                    }
+
+                }
+            }
+            else
+            {
+                await ReplyAsync("Kill List Currently Empty.");
+            }
+        }
+    }
+
     [Name("MVP")]
     public class KillListMVPModule : ModuleBase
     {
@@ -77,59 +134,6 @@ namespace Luci.Modules
             await ReplyAsync(response);
         }
     }
-
-
-    [Name("Log")]
-    [Summary("Kill List")]
-    public class KillListModule : ModuleBase<SocketCommandContext>
-    {   /// <summary>
-        /// RECENT
-        /// </summary>
-        /// <returns></returns>
-        [Command("Recent")]
-        [Summary("Recent Kills")]
-        public async Task Recent()
-        {
-            IConfiguration _config = ConfigHelper._configuration;
-            string RecentKillList = "";
-
-            foreach (KillListItem killItem in KillListService.KillLog)
-            {
-                if (killItem.P1 != _config["killlist:specialname"] || killItem.P2 != _config["killlist:specialname"])
-                {
-
-                    //Choose the KillList format for victory or defeat
-                    string RecentKillListFormat = "";
-                    if (killItem.Clan1 == _config["killlist:clanname"])
-                    {
-                        RecentKillListFormat += _config["killlist:victoryformat"] + "\r\n";
-                    }
-                    else
-                    {
-                        RecentKillListFormat += _config["killlist:defeatformat"] + "\r\n";
-                    }
-
-                    //Create formatted string for return
-                    RecentKillList += string.Format(RecentKillListFormat,
-                                killItem.P1,
-                                (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                                killItem.Clan1,
-                                (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                killItem.P2,
-                                (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                                killItem.Clan2,
-                                (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                                DateTime.Now);
-
-                    //Return formatted string to Discord
-                    await ReplyAsync(RecentKillList);
-                }
-
-            }
-            //
-        }
-
-        
 
         /// <summary>
         /// RECENT
@@ -274,5 +278,5 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
         }
-    }
+   
 }
