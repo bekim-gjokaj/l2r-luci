@@ -21,7 +21,7 @@
     "specialformat": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "specialname": "DocHoliday",
     "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "victoryformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}"
+    "victoryformat": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}"
   },
 
   "clanchat": {

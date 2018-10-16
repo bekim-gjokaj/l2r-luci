@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using Kamael.Packets;
 using Kamael.Packets.Chat;
 using Kamael.Packets.Clan;
@@ -38,23 +39,48 @@ namespace Luci.Services
                 if (l2rPacket is PacketClanMemberKillNotify && _config["killlist:enabled"] == "true")
                 {
                     //NOTIFY KILL
-                    await Task.Run(async () => await NotifyKill((PacketClanMemberKillNotify)l2rPacket));
+                    await NotifyKill((PacketClanMemberKillNotify)l2rPacket);
                 }
                 else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
                 {
                     //NOTIFY CLAN CHAT
-                    await Task.Run(async () => await NotifyClanChat((PacketChatGuildListReadResult)l2rPacket));
+                    await NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
                 }
 
                 return l2rPacket;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return null;
             }
         }
 
 
+        public static async Task<SocketUser> FindUser(string Name)
+        {
+            try
+            {
+                foreach (SocketGuild guild in _discord.Guilds)
+                {
+                    foreach (SocketUser user in guild.Users)
+                    {
+                        if (user.Username.ToLower().Contains(Name.ToLower()))
+                        {
+                            return user;
+
+                        }
+
+                        
+
+                    }
+                }
+                return null;
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
+        }
 
         public static async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
@@ -80,12 +106,15 @@ namespace Luci.Services
                                 strFormat = _config["killlist:defeatformat"];
                             }
 
+                            SocketUser P1User = null;//await FindUser(killItem.P1);
+                            SocketUser P2User = null;//await FindUser(killItem.P2);
+
                             string result = string.Format(strFormat,
-                                    killItem.P1,
+                                    (P1User == null) ? killItem.P1 : P1User.Mention,
                                     (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
                                     killItem.Clan1,
                                     (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                    killItem.P2,
+                                    (P2User == null) ? killItem.P2 : P2User.Mention,
                                     (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
                                     killItem.Clan2,
                                     (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
@@ -99,12 +128,18 @@ namespace Luci.Services
                         //SPECIAL PLAYER
                         if (kill.PlayerName == _config["killlist:specialname"] && textchan.Name == _config["killlist:specialchannel"])
                         {
+
+
+                            SocketUser P1User = await FindUser(killItem.P1);
+                            SocketUser P2User = await FindUser(killItem.P2);
+
+
                             string docbuilder = string.Format(_config["killlist:specialformat"],
-                                    killItem.P1,
+                                    (P1User == null) ? killItem.P1 : P1User.Mention,
                                     (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
                                     killItem.Clan1,
                                     (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                    killItem.P2,
+                                    (P2User == null) ? killItem.P2 : P2User.Mention,
                                     (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
                                     killItem.Clan2,
                                     (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
