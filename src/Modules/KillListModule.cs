@@ -20,9 +20,9 @@ namespace Luci.Modules
         public async Task Recent()
         {
             IConfiguration _config = ConfigHelper._configuration;
-            string RecentKillList = "";
+            string RecentKillList = "```RECENT LIST```";
 
-            var KillLog = await KillListService.GetKillLogAsync();
+            List<KillListItem> KillLog = await KillListService.GetKillLogAsync();
             if (KillLog.Count != 0)
             {
 
@@ -63,6 +63,84 @@ namespace Luci.Modules
             else
             {
                 await ReplyAsync("Kill List Currently Empty.");
+            }
+        }
+    }
+
+
+    [Name("Bounty")]
+    [Summary("Bounty management")]
+    public class BountyModule : ModuleBase<SocketCommandContext>
+    {   /// <summary>
+        /// GET BOUNTIES
+        /// </summary>
+        /// <returns></returns>
+        [Command("Bounty List")]
+        [Summary("Bounties")]
+        public async Task GetBounties()
+        {
+            IConfiguration _config = ConfigHelper._configuration;
+            string RecentKillList = "```BOUNTY LIST```";
+
+            Dictionary<string, Bounty> bountylist = await KillListService.GetBountyListAsync();
+            if (bountylist.Count != 0)
+            {
+
+                foreach (KeyValuePair<string, Bounty> item in bountylist)
+                {
+
+                    //Choose the KillList format for victory or defeat
+                    string BountyListFormat = _config["killlist:bountylistformat"] + "\r\n";
+
+                    //Create formatted string for return
+                    RecentKillList += string.Format(BountyListFormat, item.Value.PlayerName, item.Value.Description, item.Value.Reward);
+                    RecentKillList += "```\r\n" + item.Value.PlayerName + "'s Bounty Log:\r\n";
+
+                    foreach (var log in item.Value.Log)
+                    {
+                        RecentKillList += "* " + log.Key + " - " + log.Value + "\r\n";
+                    }
+                    RecentKillList += "\r\n```";
+                    //Return formatted string to Discord
+                    await ReplyAsync(RecentKillList);
+
+                }
+            }
+            else
+            {
+                await ReplyAsync("Bounty List Currently Empty.");
+            }
+        }
+
+
+        [Command("Bounty Add")]
+        [Summary("Add Bounties")]
+        public async Task AddBounty(string Player, string Description, string Reward)
+        {
+            IConfiguration _config = ConfigHelper._configuration;
+            string RecentKillList = "```BOUNTY LIST```";
+
+            Dictionary<string, Bounty> bountylist = await KillListService.AddBountyAsync(Player, Description, Reward);
+            if (bountylist.Count != 0)
+            {
+
+                foreach (KeyValuePair<string, Bounty> item in bountylist)
+                {
+
+                    //Choose the KillList format for victory or defeat
+                    string BountyListFormat = _config["killlist:bountylistformat"] + "\r\n";
+
+                    //Create formatted string for return
+                    RecentKillList += string.Format(BountyListFormat, item.Value.PlayerName, item.Value.Description, item.Value.Reward);
+
+                    //Return formatted string to Discord
+                    await ReplyAsync(RecentKillList);
+
+                }
+            }
+            else
+            {
+                await ReplyAsync("Bounty List Currently Empty.");
             }
         }
     }
@@ -155,7 +233,7 @@ namespace Luci.Modules
             int P1Count = 0;
             int P2Count = 0;
 
-            var KillLog =  await KillListService.GetKillLogAsync();
+            List<KillListItem> KillLog = await KillListService.GetKillLogAsync();
 
             foreach (KillListItem killItem in KillLog)
             {

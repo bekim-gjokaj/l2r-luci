@@ -97,10 +97,16 @@ namespace Luci.Services
                         if (textchan.Name == _config["killlist:clanchannel"] && (kill.Clan2Name == _config["killlist:clanname"] || kill.ClanName == _config["killlist:clanname"]))
                         {
                             string strFormat = "";
-                            if (kill.ClanName == _config["killlist:clanname"])
+                            Bounty bounty = await KillListService.FindBountyByNameAsync(kill.Player2Name);
+                            if (bounty != null)
+                            {
+                                strFormat = _config["killlist:bountyformat"];
+                            }
+                            else if (kill.ClanName == _config["killlist:clanname"])
                             {
                                 strFormat = _config["killlist:victoryformat"];
                             }
+                             
                             else
                             {
                                 strFormat = _config["killlist:defeatformat"];

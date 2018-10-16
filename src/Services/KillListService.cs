@@ -11,6 +11,7 @@ namespace Luci
     public class KillListService
     {
         public static List<KillListItem> KillLog;
+        public static Dictionary<string, Bounty> BountyList;
         public static IDictionary KillCountPersonal { get; set; }
         public static IDictionary KillCountClan { get; set; }
         public static IDictionary KillCountAlliance { get; set; }
@@ -23,7 +24,15 @@ namespace Luci
             Alliance = 2
         }
 
+        public class Bounty
+        {
+            public Guid BountyID { get; set; }
+            public string PlayerName { get; set; }
+            public string Description { get; set; }
+            public string Reward { get; set; }
+            public Dictionary<string, int> Log { get; set; }
 
+        }
         public class KillListItem
         {
             public string P1 { get; set; }
@@ -47,6 +56,9 @@ namespace Luci
         public async Task StartAsync()
         {
             KillLog = new List<KillListItem>();
+            Bounty bounty = new Bounty();
+            bounty.Log = new Dictionary<string, int>();
+            BountyList = new Dictionary<string, Bounty>();
             KillCountPersonal = new Dictionary<string, int>();
             KillCountClan = new Dictionary<string, int>();
             KillCountAlliance = new Dictionary<string, int>();
@@ -110,6 +122,81 @@ namespace Luci
             }
         }
 
+
+        public static async Task<Dictionary<string, Bounty>> GetBountyListAsync()
+        {
+            try
+            {
+                return BountyList;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+        public static async Task<Bounty> FindBountyByNameAsync(string Name)
+        {
+            try
+            {
+                Bounty bounty = BountyList[Name];
+                if (bounty != null)
+                {
+                    return bounty;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
+        public static async Task<Dictionary<string, Bounty>> AddBountyAsync(string Player, string Description, string Reward)
+        {
+            try
+            {
+                Bounty bounty = new Bounty
+                {
+                    BountyID = new Guid(),
+                    PlayerName = Player,
+                    Description = Description,
+                    Reward = Reward,
+                    Log = new Dictionary<string, int>()
+                };
+
+                BountyList.Add(Player, bounty);
+                return BountyList;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+        public static async Task<Bounty> AddBountyKillAsync(Bounty bounty, string Player)
+        {
+            try
+            {
+                int currentCount;
+
+                // currentCount will be zero if the key id doesn't exist..
+                bounty.Log.TryGetValue(Player, out currentCount);
+
+                bounty.Log[Player] = currentCount + 1;
+                return bounty;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
         /// <summary>
         /// Gets the count personal.
         /// </summary>
@@ -135,7 +222,13 @@ namespace Luci
                 killItem.P2KillCount = await GetCountAsync(killItem.P2, KillListType.Personal);
                 killItem.Clan1KillCount = await GetCountAsync(killItem.Clan1, KillListType.Clan);
                 killItem.Clan2KillCount = await GetCountAsync(killItem.Clan2, KillListType.Clan);
-
+                Bounty bounty = await FindBountyByNameAsync(killItem.P2);
+                if (bounty != null)
+                {
+                    killItem.BountyID = bounty.BountyID;
+                    var result = await AddBountyKillAsync(bounty, killItem.P1);
+                }
+                    
                 KillLog.Add(killItem);
 
 
