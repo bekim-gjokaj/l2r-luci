@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Luci
 {
-   
+
 
     public class KillListService
     {
-        public static List<KillListItem> KillLog { get; set; }
+        public static List<KillListItem> KillLog;
         public static IDictionary KillCountPersonal { get; set; }
         public static IDictionary KillCountClan { get; set; }
         public static IDictionary KillCountAlliance { get; set; }
@@ -80,18 +80,33 @@ namespace Luci
 
                 //If personal, check for name
                 if (dictionary.Contains(Name))
+                {
                     return (int)dictionary[Name];
+                }
                 else
                 {
                     dictionary.Add(Name, 0);
                     return (int)dictionary[Name];
                 }
-                
+
             }
             catch (System.Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 return 0;
+            }
+        }
+
+        public static async Task<List<KillListItem>> GetKillLogAsync()
+        {
+            try
+            {
+                return KillLog;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
             }
         }
 
@@ -108,31 +123,22 @@ namespace Luci
                 ProcessCounts(Name1, Name2, KillCountPersonal);
                 ProcessCounts(Clan1, Clan2, KillCountClan);
 
-                KillListItem killItem = new KillListItem();
-                killItem.P1 = Name1;
-                killItem.P2 = Name2;
-                killItem.Clan1 = Clan1;
-                killItem.Clan2 = Clan2;
-                killItem.Date = DateTime.Now;
+                KillListItem killItem = new KillListItem
+                {
+                    P1 = Name1,
+                    P2 = Name2,
+                    Clan1 = Clan1,
+                    Clan2 = Clan2,
+                    Date = DateTime.Now
+                };
                 killItem.P1KillCount = await GetCountAsync(killItem.P1, KillListType.Personal);
                 killItem.P2KillCount = await GetCountAsync(killItem.P2, KillListType.Personal);
                 killItem.Clan1KillCount = await GetCountAsync(killItem.Clan1, KillListType.Clan);
                 killItem.Clan2KillCount = await GetCountAsync(killItem.Clan2, KillListType.Clan);
 
-                //var testLog = KillLog;
-                //testLog.Reverse();
-                //var tester = testLog[0];
-                //if(!tester.Equals(killItem))
-                //{
-                //    KillLog.Add(killItem);
+                KillLog.Add(killItem);
 
-                //    
-                //}
-                //else
-                //{
-                //    return null;
-                //}
-                    
+
                 return killItem;
             }
             catch (System.Exception ex)
@@ -146,15 +152,23 @@ namespace Luci
         {
             //PROCESS KILLER
             if (dictionary.Contains(Name1))
-                dictionary[Name1] = (Int32)dictionary[Name1] + 1;
+            {
+                dictionary[Name1] = (int)dictionary[Name1] + 1;
+            }
             else
+            {
                 dictionary.Add(Name1, 1);
+            }
 
             //PROCESS KILLER
             if (dictionary.Contains(Name2))
-                dictionary[Name2] = (Int32)dictionary[Name2] - 1;
+            {
+                dictionary[Name2] = (int)dictionary[Name2] - 1;
+            }
             else
+            {
                 dictionary.Add(Name2, -1);
+            }
         }
     }
 

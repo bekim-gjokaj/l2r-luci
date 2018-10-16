@@ -2,6 +2,7 @@
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Luci.KillListService;
 
@@ -21,9 +22,11 @@ namespace Luci.Modules
             IConfiguration _config = ConfigHelper._configuration;
             string RecentKillList = "";
 
-            if (KillListService.KillLog.Count != 0)
+            var KillLog = await KillListService.GetKillLogAsync();
+            if (KillLog.Count != 0)
             {
-                foreach (KillListItem killItem in KillListService.KillLog)
+
+                foreach (KillListItem killItem in KillLog)
                 {
                     if (killItem.P1 != _config["killlist:specialname"] || killItem.P2 != _config["killlist:specialname"])
                     {
@@ -67,7 +70,7 @@ namespace Luci.Modules
     [Name("MVP")]
     public class KillListMVPModule : ModuleBase
     {
-        
+
         [Command("PzYcHO")]
         [Summary("My Kills")]
         public async Task KillCountforPzYcHOAsync()
@@ -75,7 +78,7 @@ namespace Luci.Modules
             string player = "PzYcHO";
             int result = await KillListService.GetCountAsync(player, KillListType.Personal);
             string response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
-            
+
             await ReplyAsync(response);
         }
 
@@ -86,7 +89,7 @@ namespace Luci.Modules
             string player = "yamcha";
             int result = await KillListService.GetCountAsync(player, KillListType.Personal);
             string response = string.Format("Eat shit and die. {0} has {1} kills.", player, result);
-            
+
             await ReplyAsync(response);
         }
 
@@ -135,148 +138,149 @@ namespace Luci.Modules
         }
     }
 
+    /// <summary>
+    /// RECENT
+    /// </summary>
+    /// <returns></returns>
+    [Group("kills"), Name("Kills")]
+    [Summary("vs")]
+    public class Kills : ModuleBase
+    {
+        [Command("vs")]
+        public async Task KillsForSpecificPvP(string P1, string P2)
+        {
+            IConfiguration _config = ConfigHelper._configuration;
+            string RecentKillList = "";
+            string RecentKillListFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
+            int P1Count = 0;
+            int P2Count = 0;
+
+            var KillLog =  await KillListService.GetKillLogAsync();
+
+            foreach (KillListItem killItem in KillLog)
+            {
+
+                if (killItem.P1.ToLower() == P1.ToLower() && killItem.P2.ToLower() == P2.ToLower())
+                {
+
+                    if (killItem.Clan1 == _config["killlist:clanname"])
+                    {
+                        P1Count++;
+                        P2Count--;
+                    }
+                    else
+                    {
+                        P2Count++;
+                        P1Count--;
+                    }
+
+
+                }
+
+
+            }
+            //Create formatted string for return
+            RecentKillList += string.Format(RecentKillListFormat, P1, P1Count, P2, P2Count);
+
+            //Return formatted string to Discord
+            await ReplyAsync(RecentKillList);
+
+        }
+
+
         /// <summary>
         /// RECENT
         /// </summary>
         /// <returns></returns>
-        [Group("kills"), Name("Kills")]
-        [Summary("vs")]
-        public class Kills : ModuleBase
+        [Command("for")]
+        [Summary("My Kills")]
+        public async Task KillCountByPlayerAsync(string player)
         {
-            [Command("vs")]
-            public async Task KillsForSepcificPvP(string P1, string P2)
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = "";
+
+            switch (player)
             {
-                IConfiguration _config = ConfigHelper._configuration;
-                string RecentKillList = "";
-                string RecentKillListFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
-                int P1Count = 0;
-                int P2Count = 0;
-
-                foreach (KillListItem killItem in KillListService.KillLog)
-                {
-
-                    if (killItem.P1 == P1 && killItem.P2 == P2)
-                    {
-
-                        if (killItem.Clan1 == _config["killlist:clanname"])
-                        {
-                            P1Count++;
-                            P2Count--;
-                        }
-                        else
-                        {
-                            P2Count++;
-                            P1Count--;
-                        }
-
-
-                    }
-
-
-                }
-                //Create formatted string for return
-                RecentKillList += string.Format(RecentKillListFormat, P1, P1Count, P2, P2Count);
-
-                //Return formatted string to Discord
-                await ReplyAsync(RecentKillList);
-
+                default:
+                    response = string.Format("That asshole {0} has {1} kills.", player, result);
+                    break;
             }
 
+            await ReplyAsync(response);
+        }
 
-            /// <summary>
-            /// RECENT
-            /// </summary>
-            /// <returns></returns>
-            [Command("for")]
-            [Summary("My Kills")]
-            public async Task KillCountByPlayerAsync(string player)
+
+
+
+        /// <summary>
+        /// RECENT
+        /// </summary>
+        /// <returns></returns>
+        [Command("for clan")]
+        [Summary("My Kills")]
+        public async Task KillCountByClanAsync(string clan)
+        {
+            IConfiguration _config = ConfigHelper._configuration;
+            int result = await KillListService.GetCountAsync(clan, KillListType.Clan);
+            string response = "";
+            bool UseRandom = true;
+
+            string configmsg = _config["killlist:clanmessages:" + clan];
+            if (configmsg != null)
             {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
+                response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
+            }
 
-                switch (player)
+            //if (UseConfigMessages)
+            //{
+            //    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
+            //}
+            //else
+            //{ 
+            //    switch (clan)
+            //    {
+            //        case "RogueSquad":
+            //            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
+            //            break;
+
+            //        case "Ascension":
+            //            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
+            //            break;
+
+            //        case "Legacy":
+            //            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
+            //            break;
+            //    } 
+            //}
+
+            if (UseRandom && response == "")
+            {
+                Random Rnd = new Random();
+                int selection = Rnd.Next(4);
+
+                switch (selection)
                 {
-                    default:
-                        response = string.Format("That asshole {0} has {1} kills.", player, result);
+                    case 0:
+                        response = string.Format("Those dipshits {0} have {1} kills.", clan, result);
+                        break;
+                    case 1:
+                        response = string.Format("Those losers {0} have {1} kills.", clan, result);
+                        break;
+                    case 2:
+                        response = string.Format("Those dicks {0} have {1} kills.", clan, result);
+                        break;
+                    case 3:
+                        response = string.Format("Those crybabies {0} have {1} kills.", clan, result);
+                        break;
+                    case 4:
+                        response = string.Format("Those asshats {0} have {1} kills.", clan, result);
                         break;
                 }
-
-                await ReplyAsync(response);
             }
 
 
-
-
-            /// <summary>
-            /// RECENT
-            /// </summary>
-            /// <returns></returns>
-            [Command("for clan")]
-            [Summary("My Kills")]
-            public async Task KillCountByClanAsync(string clan)
-            {
-                IConfiguration _config = ConfigHelper._configuration;
-                int result = await KillListService.GetCountAsync(clan, KillListType.Clan);
-                string response = "";
-                bool UseConfigMessages = false;
-                bool UseRandom = true;
-
-                string configmsg = _config["killlist:clanmessages:" + clan];
-                if (configmsg != null)
-                {
-                    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result); 
-                }
-
-                //if (UseConfigMessages)
-                //{
-                //    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
-                //}
-                //else
-                //{ 
-                //    switch (clan)
-                //    {
-                //        case "RogueSquad":
-                //            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
-                //            break;
-
-                //        case "Ascension":
-                //            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
-                //            break;
-
-                //        case "Legacy":
-                //            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
-                //            break;
-                //    } 
-                //}
-
-                if (UseRandom && response == "")
-                {
-                    Random Rnd = new Random();
-                    int selection = Rnd.Next(4);
-
-                    switch (selection)
-                    {
-                        case 0:
-                            response = string.Format("Those dipshits {0} have {1} kills.", clan, result);
-                            break;
-                        case 1:
-                            response = string.Format("Those losers {0} have {1} kills.", clan, result);
-                            break;
-                        case 2:
-                            response = string.Format("Those dicks {0} have {1} kills.", clan, result);
-                            break;
-                        case 3:
-                            response = string.Format("Those crybabies {0} have {1} kills.", clan, result);
-                            break;
-                        case 4:
-                            response = string.Format("Those asshats {0} have {1} kills.", clan, result);
-                            break;
-                    }
-                }
-
-
-                await ReplyAsync(response);
-            }
+            await ReplyAsync(response);
         }
-   
+    }
+
 }
