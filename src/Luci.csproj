@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>Luci</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;Debug.Bekim;Debug.Tiffany</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

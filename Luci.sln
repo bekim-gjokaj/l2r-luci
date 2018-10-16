@@ -7,10 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Luci", "src\Luci.csproj", "
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug.Bekim|Any CPU = Debug.Bekim|Any CPU
+		Debug.Tiffany|Any CPU = Debug.Tiffany|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug.Bekim|Any CPU.ActiveCfg = Debug.Bekim|Any CPU
+		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug.Bekim|Any CPU.Build.0 = Debug.Bekim|Any CPU
+		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug.Tiffany|Any CPU.ActiveCfg = Debug.Tiffany|Any CPU
+		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug.Tiffany|Any CPU.Build.0 = Debug.Tiffany|Any CPU
 		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D0A1517-729B-4052-947E-A142EA4C0836}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D0A1517-729B-4052-947E-A142EA4C0836}.Release|Any CPU.ActiveCfg = Release|Any CPU
