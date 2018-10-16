@@ -7,21 +7,21 @@
     "interface": 1
   },
   "killlist": {
-    "enabled": "true",
     "clanchannel": "pzychos-bot-test",
-    "clanname": "Legacy",
-    "victoryformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "defeatformat": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "specialenabled": "true",
-    "specialname": "DocHoliday",
-    "specialchannel": "docs-slaughterhouse",
-    "specialformat": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "clanmessages": {
       "Legacy": "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",
       "Ascension": "Those bitches {0} have {1} kills... but they got good dick.",
       "RogueSquad": "Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!"
-    }
+    },
+    "clanname": "Legacy",
+    "defeatformat": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "enabled": "true",
+    "specialchannel": "docs-slaughterhouse",
+    "specialenabled": "true",
+    "specialformat": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "specialname": "DocHoliday",
+    "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "victoryformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}"
   },
 
   "clanchat": {

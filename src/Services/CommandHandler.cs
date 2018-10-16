@@ -47,6 +47,11 @@ namespace Luci
                 if (!result.IsSuccess)     // If not successful, reply with the error.
                     await context.Channel.SendMessageAsync(result.ToString());
             }
+
+            if(msg.Content.ToLower().Contains("should i"))
+            {
+                 await context.Channel.SendMessageAsync("Do it. Do it. Do it.");
+            }
         }
     }
 }
