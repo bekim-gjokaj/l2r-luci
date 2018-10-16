@@ -13,7 +13,8 @@
     "specialenabled": "true",
     "specialname": "DocHoliday",
     "specialchannel": "docs-slaughterhouse",
-    "specialformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}"
+    "specialformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}"
   },
 
   "clanchat": {

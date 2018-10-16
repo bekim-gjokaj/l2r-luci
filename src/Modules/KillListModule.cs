@@ -61,7 +61,7 @@ namespace Luci.Modules
         /// RECENT
         /// </summary>
         /// <returns></returns>
-        [Group("kills"), Name("Luci")]
+        [Group("kills"), Name("Kills")]
         [Summary("Recent Kills")]
         public class Kills : ModuleBase
         {
@@ -114,7 +114,7 @@ namespace Luci.Modules
             /// RECENT
             /// </summary>
             /// <returns></returns>
-            [Command("Kills"), Priority(1)]
+            [Command("for"), Priority(1)]
             [Summary("My Kills")]
             public async Task KillCountByPlayerAsync(string player)
             {
@@ -125,6 +125,18 @@ namespace Luci.Modules
                 {
                     case "yamcha":
                         response = string.Format("Eat shit and die. {0} has {1} kills.", player, result);
+                        break;
+
+                    case "Tyranitar":
+                        response = string.Format("The PvE King {0} has {1} kills.", player, result);
+                        break;
+
+                    case "PzYcHO":
+                        response = string.Format("Hold my Beer {0} The Queen Bitch has {1} kills.", player, result);
+                        break;
+
+                    case "JuggernuttZ":
+                        response = string.Format("The Amazing {0} has {1} kills.", player, result);
                         break;
 
                     case "EdgyAsHell":
@@ -150,7 +162,7 @@ namespace Luci.Modules
             /// RECENT
             /// </summary>
             /// <returns></returns>
-            [Command("Clan Kills For")]
+            [Command("for clan")]
             [Summary("My Kills")]
             public async Task KillCountByClanAsync(string clan)
             {
