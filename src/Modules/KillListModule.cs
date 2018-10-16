@@ -163,29 +163,58 @@ namespace Luci.Modules
             {
                 int result = await KillListService.GetCountAsync(clan, KillListType.Clan);
                 string response = "";
-
-                switch (clan)
+                bool UseRandom = true;
+                if (UseRandom)
                 {
-                    case "RogueSquad":
-                        response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
-                        break;
+                    Random Rnd = new Random();
+                    int selection = Rnd.Next(4);
 
-                    case "Ascension":
-                        response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
-                        break;
+                    switch(selection)
+                    {
+                        case 0:
+                            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
+                            break;
+                        case 1:
+                            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
+                            break;
+                        case 2:
+                            response = string.Format("Those dicks {0} have {1} kills.", clan, result);
+                            break;
+                        case 3:
+                            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
+                            break;
+                        case 4:
+                            response = string.Format("Those asshats {0} have {1} kills.", clan, result);
+                            break;
+                    }
+                }
+                else
+                {
 
-                    case "SakuraMoonblade":
-                    case "TheMainEvent":
-                        response = string.Format("Those dicks {0} have {1} kills.", clan, result);
-                        break;
 
-                    case "Legacy":
-                        response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
-                        break;
+                    switch (clan)
+                    {
+                        case "RogueSquad":
+                            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
+                            break;
 
-                    default:
-                        response = string.Format("Those asshats {0} have {1} kills.", clan, result);
-                        break;
+                        case "Ascension":
+                            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
+                            break;
+
+                        case "SakuraMoonblade":
+                        case "TheMainEvent":
+                            response = string.Format("Those dicks {0} have {1} kills.", clan, result);
+                            break;
+
+                        case "Legacy":
+                            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
+                            break;
+
+                        default:
+                            response = string.Format("Those asshats {0} have {1} kills.", clan, result);
+                            break;
+                    }
                 }
 
                 await ReplyAsync(response);

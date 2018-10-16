@@ -90,6 +90,10 @@ namespace Luci.Services
                         await textchan.SendMessageAsync(result);
 
                     }
+
+
+
+                    //SPECIAL PLAYER
                     if (kill.PlayerName == _config["killlist:specialname"] && textchan.Name == _config["killlist:specialchannel"])
                     {
                         string docbuilder = string.Format(_config["killlist:specialformat"],
