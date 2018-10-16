@@ -161,23 +161,32 @@ namespace Luci.Modules
             [Summary("My Kills")]
             public async Task KillCountByClanAsync(string clan)
             {
+                IConfiguration _config = ConfigHelper._configuration;
                 int result = await KillListService.GetCountAsync(clan, KillListType.Clan);
                 string response = "";
+                bool UseConfigMessages = false;
                 bool UseRandom = true;
 
-                switch (clan)
+                if (UseConfigMessages)
                 {
-                    case "RogueSquad":
-                        response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
-                        break;
+                    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
+                }
+                else
+                { 
+                    switch (clan)
+                    {
+                        case "RogueSquad":
+                            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
+                            break;
 
-                    case "Ascension":
-                        response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
-                        break;
+                        case "Ascension":
+                            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
+                            break;
 
-                    case "Legacy":
-                        response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
-                        break;
+                        case "Legacy":
+                            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
+                            break;
+                    } 
                 }
 
                 if (UseRandom && response == "")
