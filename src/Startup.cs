@@ -17,10 +17,25 @@ namespace Luci
 
         public Startup(string[] args)
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder()        // Create a new instance of the config builder
-                .SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
-                .AddJsonFile("_configuration.json")        // Add this (json encoded) file to the configuration
-                .AddJsonFile("_configuration.{env.EnvironmentName}.json", optional: true);
+            IConfigurationBuilder builder = new ConfigurationBuilder();        // Create a new instance of the config builder
+            var env = Environment.GetEnvironmentVariables();
+            string hostingEnv = (string)env["Hosting:Environment"];
+            if (hostingEnv == "Bekim")
+            {
+                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
+                .AddJsonFile("_configuration.Bekim.json");        // Add this (json encoded) file to the configuration
+            }
+            else if (hostingEnv == "Tiffany")
+            {
+                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
+                .AddJsonFile("_configuration.Tiffany.json");        // Add this (json encoded) file to the configuration
+            }
+            else 
+            {
+                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
+                .AddJsonFile("_configuration.json");        // Add this (json encoded) file to the configuration
+            }
+
             Configuration = builder.Build();                // Build the configuration
 
             builder.AddEnvironmentVariables();

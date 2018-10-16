@@ -4,7 +4,7 @@
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
   "packets": {
-    "interface": 3
+    "interface": 1
   },
   "killlist": {
     "enabled": "true",
