@@ -65,7 +65,7 @@ namespace Luci.Modules
         [Summary("Recent Kills")]
         public class Kills : ModuleBase
         {
-            [Command("vs"), Priority(0)]
+            [Command("vs")]
             public async Task KillsForSepcificPvP(string P1, string P2)
             {
                 IConfiguration _config = ConfigHelper._configuration;
@@ -109,9 +109,43 @@ namespace Luci.Modules
             /// RECENT
             /// </summary>
             /// <returns></returns>
-            [Command("for"), Priority(1)]
+            [Command("for"), Priority(5)]
             [Summary("My Kills")]
             public async Task KillCountByPlayerAsync(string player)
+            {
+                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+                string response = "";
+
+                switch (player)
+                {
+                    default:
+                        response = string.Format("That asshole {0} has {1} kills.", player, result);
+                        break;
+                }
+
+                await ReplyAsync(response);
+            }
+
+            [Command("PzYcHO"), Priority(0)]
+            [Summary("My Kills")]
+            public async Task KillCountforpzychoAsync(string player)
+            {
+                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+                string response = "";
+
+                switch (player)
+                {
+                    case "PzYcHO":
+                        response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
+                        break;
+                }
+
+                await ReplyAsync(response);
+            }
+
+            [Command("yamcha"), Priority(1)]
+            [Summary("My Kills")]
+            public async Task KillCountforyamchaAsync(string player)
             {
                 int result = await KillListService.GetCountAsync(player, KillListType.Personal);
                 string response = "";
@@ -121,36 +155,63 @@ namespace Luci.Modules
                     case "yamcha":
                         response = string.Format("Eat shit and die. {0} has {1} kills.", player, result);
                         break;
+                }
 
-                    case "Tyranitar":
-                        response = string.Format("The PvE King {0} has {1} kills.", player, result);
-                        break;
+                await ReplyAsync(response);
+            }
 
-                    case "PzYcHO":
-                        response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
-                        break;
+            [Command("EdgyAsHell"), Priority(2)]
+            [Summary("My Kills")]
+            public async Task KillCountforedgyashellAsync(string player)
+            {
+                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+                string response = "";
 
-                    case "JuggernuttZ":
-                        response = string.Format("The Amazing {0} has {1} kills.", player, result);
-                        break;
-
+                switch (player)
+                {
                     case "EdgyAsHell":
-                        response = string.Format("That asshole {0} has {1} kills.", player, result);
-                        break;
-
-                    case "GOOD":
-                    case "EVIL":
-                    case "SCERogue":
-                        response = string.Format("That asshole {0} has {1} kills.", player, result);
-                        break;
-
-                    default:
                         response = string.Format("That asshole {0} has {1} kills.", player, result);
                         break;
                 }
 
                 await ReplyAsync(response);
             }
+
+            [Command("JuggernuttZ"), Priority(3)]
+            [Summary("My Kills")]
+            public async Task KillCountjuggernutzAsync(string player)
+            {
+                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+                string response = "";
+
+                switch (player)
+                {
+                    case "JuggernuttZ":
+                        response = string.Format("The Amazing {0} has {1} kills.", player, result);
+                        break;
+                }
+
+                await ReplyAsync(response);
+            }
+
+            [Command("Tyranitar"), Priority(4)]
+            [Summary("My Kills")]
+            public async Task KillCounttyranitarAsync(string player)
+            {
+                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+                string response = "";
+
+                switch (player)
+                {
+                    case "Tyranitar":
+                        response = string.Format("The PvE King {0} has {1} kills.", player, result);
+                        break;
+                }
+
+                await ReplyAsync(response);
+            }
+
+
 
 
             /// <summary>
