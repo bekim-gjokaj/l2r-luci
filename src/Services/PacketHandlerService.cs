@@ -7,6 +7,7 @@ using PacketDotNet;
 using SharpPcap;
 using System;
 using System.Threading.Tasks;
+using static Luci.KillListService;
 
 namespace Luci.Services
 {
