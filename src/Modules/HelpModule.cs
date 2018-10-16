@@ -51,38 +51,38 @@ namespace Luci.Modules
             await ReplyAsync("", false, builder.Build());
         }
 
-        [Command("help")]
-        public async Task HelpAsync(string command)
-        {
-            var result = _service.Search(Context, command);
+        //[Command("help")]
+        //public async Task HelpAsync(string command)
+        //{
+        //    var result = _service.Search(Context, command);
 
-            if (!result.IsSuccess)
-            {
-                await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
-                return;
-            }
+        //    if (!result.IsSuccess)
+        //    {
+        //        await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
+        //        return;
+        //    }
 
-            string prefix = _config["prefix"];
-            var builder = new EmbedBuilder()
-            {
-                Color = new Color(114, 137, 218),
-                Description = $"Here are some commands like **{command}**"
-            };
+        //    string prefix = _config["prefix"];
+        //    var builder = new EmbedBuilder()
+        //    {
+        //        Color = new Color(114, 137, 218),
+        //        Description = $"Here are some commands like **{command}**"
+        //    };
 
-            foreach (var match in result.Commands)
-            {
-                var cmd = match.Command;
+        //    foreach (var match in result.Commands)
+        //    {
+        //        var cmd = match.Command;
 
-                builder.AddField(x =>
-                {
-                    x.Name = string.Join(", ", cmd.Aliases);
-                    x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" + 
-                              $"Summary: {cmd.Summary}";
-                    x.IsInline = false;
-                });
-            }
+        //        builder.AddField(x =>
+        //        {
+        //            x.Name = string.Join(", ", cmd.Aliases);
+        //            x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" + 
+        //                      $"Summary: {cmd.Summary}";
+        //            x.IsInline = false;
+        //        });
+        //    }
 
-            await ReplyAsync("", false, builder.Build());
-        }
+        //    await ReplyAsync("", false, builder.Build());
+        //}
     }
 }

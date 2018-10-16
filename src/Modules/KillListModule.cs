@@ -7,7 +7,7 @@ using static Luci.KillListService;
 
 namespace Luci.Modules
 {
-    [Name("Kills")]
+    [Name("Log")]
     [Summary("Kill List")]
     public class KillListModule : ModuleBase<SocketCommandContext>
     {   /// <summary>
@@ -65,12 +65,12 @@ namespace Luci.Modules
         [Summary("Recent Kills")]
         public class Kills : ModuleBase
         {
-            [Command("Kills"), Priority(0)]
+            [Command("vs"), Priority(0)]
             public async Task KillsForSepcificPvP(string P1, string P2)
             {
                 IConfiguration _config = ConfigHelper._configuration;
                 string RecentKillList = "";
-                string RecentKillListFormat = "Player {0} has {1} kill(S). Player {2} has {3} kill(s).\r\n";
+                string RecentKillListFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
                 int P1Count = 0;
                 int P2Count = 0;
 
@@ -91,15 +91,16 @@ namespace Luci.Modules
                             P1Count--;
                         }
 
-                        //Create formatted string for return
-                        RecentKillList += string.Format(RecentKillListFormat, P1, P1Count, P2, P2Count);
-
-                        //Return formatted string to Discord
-                        await ReplyAsync(RecentKillList);
+                        
                     }
 
 
                 }
+                //Create formatted string for return
+                RecentKillList += string.Format(RecentKillListFormat, P1, P1Count, P2, P2Count);
+
+                //Return formatted string to Discord
+                await ReplyAsync(RecentKillList);
 
             }
 
