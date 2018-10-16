@@ -57,7 +57,7 @@ namespace Luci.Services
 
         public static async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
-            KillListItem killItem = await _killService.ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
+            KillListItem killItem = await KillListService.ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
 
             //dictRecentKills.Add(builder);
 

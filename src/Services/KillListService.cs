@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Luci
 {
 
-    public class KillListItem
+    public class KillListItem 
     {
         public string P1 { get; set; }
         public string P2 { get; set; }
@@ -20,7 +21,12 @@ namespace Luci
         public bool IsBountyKill { get; set; }
         public Guid BountyID { get; set; }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            
+        }
     }
+
 
     public class KillListService
     {
@@ -51,7 +57,7 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public async Task<int> GetCountAsync(string Name, KillListType KillType)
+        public static async Task<int> GetCountAsync(string Name, KillListType KillType)
         {
             try
             {
@@ -94,7 +100,7 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public async Task<KillListItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2)
+        public static async Task<KillListItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2)
         {
             try
             {
@@ -123,7 +129,7 @@ namespace Luci
             }
         }
 
-        public async void ProcessCounts(string Name1, string Name2, IDictionary dictionary)
+        public static async void ProcessCounts(string Name1, string Name2, IDictionary dictionary)
         {
             //PROCESS KILLER
             if (dictionary.Contains(Name1))
