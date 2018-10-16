@@ -70,6 +70,9 @@ namespace Luci.Modules
             {
                 IConfiguration _config = ConfigHelper._configuration;
                 string RecentKillList = "";
+                string RecentKillListFormat = "Player {0} has {1} kill(S). Player {2} has {3} kill(s).\r\n";
+                int P1Count = 0;
+                int P2Count = 0;
 
                 foreach (KillListItem killItem in KillListService.KillLog)
                 {
@@ -77,28 +80,19 @@ namespace Luci.Modules
                     if (killItem.P1 == P1 && killItem.P2 == P2)
                     {
 
-                        //Choose the KillList format for victory or defeat
-                        string RecentKillListFormat = "";
                         if (killItem.Clan1 == _config["killlist:clanname"])
                         {
-                            RecentKillListFormat += _config["killlist:victoryformat"] + "\r\n";
+                            P1Count++;
+                            P2Count--;
                         }
                         else
                         {
-                            RecentKillListFormat += _config["killlist:defeatformat"] + "\r\n";
+                            P2Count++;
+                            P1Count--;
                         }
 
                         //Create formatted string for return
-                        RecentKillList += string.Format(RecentKillListFormat,
-                                    killItem.P1,
-                                    (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                                    killItem.Clan1,
-                                    (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                    killItem.P2,
-                                    (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                                    killItem.Clan2,
-                                    (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                                    DateTime.Now);
+                        RecentKillList += string.Format(RecentKillListFormat, P1, P1Count, P2, P2Count);
 
                         //Return formatted string to Discord
                         await ReplyAsync(RecentKillList);
