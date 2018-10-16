@@ -62,7 +62,7 @@ namespace Luci.Modules
         /// </summary>
         /// <returns></returns>
         [Group("kills"), Name("Kills")]
-        [Summary("Recent Kills")]
+        [Summary("vs")]
         public class Kills : ModuleBase
         {
             [Command("vs")]
@@ -109,7 +109,7 @@ namespace Luci.Modules
             /// RECENT
             /// </summary>
             /// <returns></returns>
-            [Command("for"), Priority(5)]
+            [Command("for")]
             [Summary("My Kills")]
             public async Task KillCountByPlayerAsync(string player)
             {
@@ -126,7 +126,7 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("PzYcHO"), Priority(0)]
+            [Command("PzYcHO")]
             [Summary("My Kills")]
             public async Task KillCountforpzychoAsync(string player)
             {
@@ -143,7 +143,7 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("yamcha"), Priority(1)]
+            [Command("yamcha")]
             [Summary("My Kills")]
             public async Task KillCountforyamchaAsync(string player)
             {
@@ -160,7 +160,7 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("EdgyAsHell"), Priority(2)]
+            [Command("EdgyAsHell")]
             [Summary("My Kills")]
             public async Task KillCountforedgyashellAsync(string player)
             {
@@ -177,7 +177,7 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("JuggernuttZ"), Priority(3)]
+            [Command("JuggernuttZ")]
             [Summary("My Kills")]
             public async Task KillCountjuggernutzAsync(string player)
             {
@@ -194,7 +194,7 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("Tyranitar"), Priority(4)]
+            [Command("Tyranitar")]
             [Summary("My Kills")]
             public async Task KillCounttyranitarAsync(string player)
             {
