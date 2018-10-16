@@ -7,6 +7,67 @@ using static Luci.KillListService;
 
 namespace Luci.Modules
 {
+    [Name("MVP")]
+    public class KillListMVPModule : ModuleBase
+    {
+        
+        [Command("PzYcHO")]
+        [Summary("My Kills")]
+        public async Task KillCountforPzYcHOAsync()
+        {
+            string player = "PzYcHO";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
+            
+            await ReplyAsync(response);
+        }
+
+        [Command("yamcha")]
+        [Summary("My Kills")]
+        public async Task KillCountforyamchaAsync()
+        {
+            string player = "yamcha";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("Eat shit and die. {0} has {1} kills.", player, result);
+            
+            await ReplyAsync(response);
+        }
+
+        [Command("EdgyAsHell")]
+        [Summary("My Kills")]
+        public async Task KillCountforedgyashellAsync()
+        {
+            string player = "EdgyAsHell";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("That asshole {0} has {1} kills.", player, result);
+
+            await ReplyAsync(response);
+        }
+
+        [Command("JuggernuttZ")]
+        [Summary("My Kills")]
+        public async Task KillCountforJuggernuttZAsync()
+        {
+            string player = "JuggernuttZ";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("The Amazing {0} has {1} kills.", player, result);
+
+            await ReplyAsync(response);
+        }
+
+        [Command("Tyranitar")]
+        [Summary("My Kills")]
+        public async Task KillCountforTyranitarAsync()
+        {
+            string player = "Tyranitar";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("The PvE King {0} has {1} kills.", player, result);
+
+            await ReplyAsync(response);
+        }
+    }
+
+
     [Name("Log")]
     [Summary("Kill List")]
     public class KillListModule : ModuleBase<SocketCommandContext>
@@ -56,6 +117,8 @@ namespace Luci.Modules
             }
             //
         }
+
+        
 
         /// <summary>
         /// RECENT
@@ -126,91 +189,6 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
 
-            [Command("PzYcHO")]
-            [Summary("My Kills")]
-            public async Task KillCountforpzychoAsync(string player)
-            {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
-
-                switch (player)
-                {
-                    case "PzYcHO":
-                        response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
-                        break;
-                }
-
-                await ReplyAsync(response);
-            }
-
-            [Command("yamcha")]
-            [Summary("My Kills")]
-            public async Task KillCountforyamchaAsync(string player)
-            {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
-
-                switch (player)
-                {
-                    case "yamcha":
-                        response = string.Format("Eat shit and die. {0} has {1} kills.", player, result);
-                        break;
-                }
-
-                await ReplyAsync(response);
-            }
-
-            [Command("EdgyAsHell")]
-            [Summary("My Kills")]
-            public async Task KillCountforedgyashellAsync(string player)
-            {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
-
-                switch (player)
-                {
-                    case "EdgyAsHell":
-                        response = string.Format("That asshole {0} has {1} kills.", player, result);
-                        break;
-                }
-
-                await ReplyAsync(response);
-            }
-
-            [Command("JuggernuttZ")]
-            [Summary("My Kills")]
-            public async Task KillCountjuggernutzAsync(string player)
-            {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
-
-                switch (player)
-                {
-                    case "JuggernuttZ":
-                        response = string.Format("The Amazing {0} has {1} kills.", player, result);
-                        break;
-                }
-
-                await ReplyAsync(response);
-            }
-
-            [Command("Tyranitar")]
-            [Summary("My Kills")]
-            public async Task KillCounttyranitarAsync(string player)
-            {
-                int result = await KillListService.GetCountAsync(player, KillListType.Personal);
-                string response = "";
-
-                switch (player)
-                {
-                    case "Tyranitar":
-                        response = string.Format("The PvE King {0} has {1} kills.", player, result);
-                        break;
-                }
-
-                await ReplyAsync(response);
-            }
-
 
 
 
@@ -228,27 +206,33 @@ namespace Luci.Modules
                 bool UseConfigMessages = false;
                 bool UseRandom = true;
 
-                if (UseConfigMessages)
+                string configmsg = _config["killlist:clanmessages:" + clan];
+                if (configmsg != null)
                 {
-                    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
+                    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result); 
                 }
-                else
-                { 
-                    switch (clan)
-                    {
-                        case "RogueSquad":
-                            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
-                            break;
 
-                        case "Ascension":
-                            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
-                            break;
+                //if (UseConfigMessages)
+                //{
+                //    response = string.Format(_config["killlist:clanmessages:" + clan], clan, result);
+                //}
+                //else
+                //{ 
+                //    switch (clan)
+                //    {
+                //        case "RogueSquad":
+                //            response = string.Format("Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!", clan, result);
+                //            break;
 
-                        case "Legacy":
-                            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
-                            break;
-                    } 
-                }
+                //        case "Ascension":
+                //            response = string.Format("Those bitches {0} have {1} kills... but they got good dick.", clan, result);
+                //            break;
+
+                //        case "Legacy":
+                //            response = string.Format("Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!", clan, result);
+                //            break;
+                //    } 
+                //}
 
                 if (UseRandom && response == "")
                 {
@@ -279,6 +263,5 @@ namespace Luci.Modules
                 await ReplyAsync(response);
             }
         }
-        //
     }
 }
