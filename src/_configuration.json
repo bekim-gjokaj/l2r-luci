@@ -3,10 +3,6 @@
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
-  "packets": {
-    "interface": 3
-  },
-
   "killlist": {
     "enabled": "true",
     "clanchannel": "pzychos-bot-test",

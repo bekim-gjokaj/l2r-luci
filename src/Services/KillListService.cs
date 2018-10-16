@@ -6,27 +6,7 @@ using System.Threading.Tasks;
 
 namespace Luci
 {
-
-    public class KillListItem 
-    {
-        public string P1 { get; set; }
-        public string P2 { get; set; }
-        public string Clan1 { get; set; }
-        public string Clan2 { get; set; }
-        public DateTime Date { get; set; }
-        public int P1KillCount { get; set; }
-        public int P2KillCount { get; set; }
-        public int Clan1KillCount { get; set; }
-        public int Clan2KillCount { get; set; }
-        public bool IsBountyKill { get; set; }
-        public Guid BountyID { get; set; }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            
-        }
-    }
-
+   
 
     public class KillListService
     {
@@ -41,6 +21,27 @@ namespace Luci
             Personal = 0,
             Clan = 1,
             Alliance = 2
+        }
+
+
+        public class KillListItem
+        {
+            public string P1 { get; set; }
+            public string P2 { get; set; }
+            public string Clan1 { get; set; }
+            public string Clan2 { get; set; }
+            public DateTime Date { get; set; }
+            public int P1KillCount { get; set; }
+            public int P2KillCount { get; set; }
+            public int Clan1KillCount { get; set; }
+            public int Clan2KillCount { get; set; }
+            public bool IsBountyKill { get; set; }
+            public Guid BountyID { get; set; }
+
+            public void GetObjectData(SerializationInfo info, StreamingContext context)
+            {
+
+            }
         }
 
         public async Task StartAsync()
@@ -118,9 +119,20 @@ namespace Luci
                 killItem.Clan1KillCount = await GetCountAsync(killItem.Clan1, KillListType.Clan);
                 killItem.Clan2KillCount = await GetCountAsync(killItem.Clan2, KillListType.Clan);
 
-                KillLog.Add(killItem);
+                var testLog = KillLog;
+                testLog.Reverse();
+                var tester = testLog[0];
+                if(!tester.Equals(killItem))
+                {
+                    KillLog.Add(killItem);
 
-                return killItem;
+                    return killItem;
+                }
+                else
+                {
+                    return null;
+                }
+                    
             }
             catch (System.Exception ex)
             {
