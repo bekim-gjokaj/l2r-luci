@@ -65,6 +65,17 @@ namespace Luci.Modules
 
             await ReplyAsync(response);
         }
+
+        [Command("MrDitch")]
+        [Summary("My Kills")]
+        public async Task KillCountforMrDitchAsync()
+        {
+            string player = "MrDitch";
+            int result = await KillListService.GetCountAsync(player, KillListType.Personal);
+            string response = string.Format("The shemale spy MrBitch has {0} kills.", result);
+
+            await ReplyAsync(response);
+        }
     }
 
 

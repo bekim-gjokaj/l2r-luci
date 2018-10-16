@@ -3,6 +3,9 @@
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
+  "packets": {
+    "interface": 3
+  },
   "killlist": {
     "enabled": "true",
     "clanchannel": "pzychos-bot-test",
@@ -15,9 +18,9 @@
     "specialformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "clanmessages": {
-      "Legacy" : "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",
+      "Legacy": "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",
       "Ascension": "Those bitches {0} have {1} kills... but they got good dick.",
-      "RogueSquad" : "Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!"
+      "RogueSquad": "Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!"
     }
   },
 
