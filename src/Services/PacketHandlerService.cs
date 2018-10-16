@@ -61,55 +61,58 @@ namespace Luci.Services
             KillListItem killItem = await KillListService.ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
 
             //dictRecentKills.Add(builder);
-
-            foreach (SocketGuild guild in _discord.Guilds)
+            if (killItem != null)
             {
-                foreach (SocketTextChannel textchan in guild.TextChannels)
+
+                foreach (SocketGuild guild in _discord.Guilds)
                 {
-                    if (textchan.Name == _config["killlist:clanchannel"] && (kill.Clan2Name == _config["killlist:clanname"] || kill.ClanName == _config["killlist:clanname"]))
+                    foreach (SocketTextChannel textchan in guild.TextChannels)
                     {
-                        string strFormat = "";
-                        if (kill.ClanName == _config["killlist:clanname"])
+                        if (textchan.Name == _config["killlist:clanchannel"] && (kill.Clan2Name == _config["killlist:clanname"] || kill.ClanName == _config["killlist:clanname"]))
                         {
-                            strFormat = _config["killlist:victoryformat"];
+                            string strFormat = "";
+                            if (kill.ClanName == _config["killlist:clanname"])
+                            {
+                                strFormat = _config["killlist:victoryformat"];
+                            }
+                            else
+                            {
+                                strFormat = _config["killlist:defeatformat"];
+                            }
+
+                            string result = string.Format(strFormat,
+                                    killItem.P1,
+                                    (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+                                    killItem.Clan1,
+                                    (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+                                    killItem.P2,
+                                    (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+                                    killItem.Clan2,
+                                    (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+                                    DateTime.Now);
+                            await textchan.SendMessageAsync(result);
+
                         }
-                        else
+
+
+
+                        //SPECIAL PLAYER
+                        if (kill.PlayerName == _config["killlist:specialname"] && textchan.Name == _config["killlist:specialchannel"])
                         {
-                            strFormat = _config["killlist:defeatformat"];
+                            string docbuilder = string.Format(_config["killlist:specialformat"],
+                                    killItem.P1,
+                                    (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+                                    killItem.Clan1,
+                                    (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+                                    killItem.P2,
+                                    (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+                                    killItem.Clan2,
+                                    (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+                                    DateTime.Now);
+                            await textchan.SendMessageAsync(docbuilder);
                         }
 
-                        string result = string.Format(strFormat,
-                                killItem.P1,
-                                (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                                killItem.Clan1,
-                                (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                killItem.P2,
-                                (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                                killItem.Clan2,
-                                (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                                DateTime.Now);
-                        await textchan.SendMessageAsync(result);
-
-                    }
-
-
-
-                    //SPECIAL PLAYER
-                    if (kill.PlayerName == _config["killlist:specialname"] && textchan.Name == _config["killlist:specialchannel"])
-                    {
-                        string docbuilder = string.Format(_config["killlist:specialformat"],
-                                killItem.P1,
-                                (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                                killItem.Clan1,
-                                (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                killItem.P2,
-                                (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                                killItem.Clan2,
-                                (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                                DateTime.Now);
-                        await textchan.SendMessageAsync(docbuilder);
-                    }
-
+                    } 
                 }
             }
         }

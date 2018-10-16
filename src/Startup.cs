@@ -19,9 +19,11 @@ namespace Luci
         {
             IConfigurationBuilder builder = new ConfigurationBuilder()        // Create a new instance of the config builder
                 .SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
-                .AddJsonFile("_configuration.json");        // Add this (json encoded) file to the configuration
+                .AddJsonFile("_configuration.json")        // Add this (json encoded) file to the configuration
+                .AddJsonFile("_configuration.{env.EnvironmentName}.json", optional: true);
             Configuration = builder.Build();                // Build the configuration
 
+            builder.AddEnvironmentVariables();
             ConfigHelper._configuration = Configuration;
         }
 

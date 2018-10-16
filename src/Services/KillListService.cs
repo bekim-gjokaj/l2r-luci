@@ -119,20 +119,21 @@ namespace Luci
                 killItem.Clan1KillCount = await GetCountAsync(killItem.Clan1, KillListType.Clan);
                 killItem.Clan2KillCount = await GetCountAsync(killItem.Clan2, KillListType.Clan);
 
-                var testLog = KillLog;
-                testLog.Reverse();
-                var tester = testLog[0];
-                if(!tester.Equals(killItem))
-                {
-                    KillLog.Add(killItem);
+                //var testLog = KillLog;
+                //testLog.Reverse();
+                //var tester = testLog[0];
+                //if(!tester.Equals(killItem))
+                //{
+                //    KillLog.Add(killItem);
 
-                    return killItem;
-                }
-                else
-                {
-                    return null;
-                }
+                //    
+                //}
+                //else
+                //{
+                //    return null;
+                //}
                     
+                return killItem;
             }
             catch (System.Exception ex)
             {
