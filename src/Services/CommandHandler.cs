@@ -12,18 +12,21 @@ namespace Luci
         private readonly CommandService _commands;
         private readonly IConfigurationRoot _config;
         private readonly IServiceProvider _provider;
+        private readonly KillListService _killList;
 
         // DiscordSocketClient, CommandService, IConfigurationRoot, and IServiceProvider are injected automatically from the IServiceProvider
         public CommandHandler(
             DiscordSocketClient discord,
             CommandService commands,
             IConfigurationRoot config,
-            IServiceProvider provider)
+            IServiceProvider provider,
+            KillListService killList)
         {
             _discord = discord;
             _commands = commands;
             _config = config;
             _provider = provider;
+            _killList = killList;
 
             _discord.MessageReceived += OnMessageReceivedAsync;
         }

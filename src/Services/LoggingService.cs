@@ -29,15 +29,22 @@ namespace Luci
         
         private Task OnLogAsync(LogMessage msg)
         {
-            if (!Directory.Exists(_logDirectory))     // Create the log directory if it doesn't exist
-                Directory.CreateDirectory(_logDirectory);
-            if (!File.Exists(_logFile))               // Create today's log file if it doesn't exist
-                File.Create(_logFile).Dispose();
+            try
+            {
+                if (!Directory.Exists(_logDirectory))     // Create the log directory if it doesn't exist
+                    Directory.CreateDirectory(_logDirectory);
+                if (!File.Exists(_logFile))               // Create today's log file if it doesn't exist
+                    File.Create(_logFile).Dispose();
 
-            string logText = $"{DateTime.UtcNow.ToString("hh:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
-            File.AppendAllText(_logFile, logText + "\n");     // Write the log text to a file
+                string logText = $"{DateTime.UtcNow.ToString("hh:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
+                File.AppendAllText(_logFile, logText + "\n");     // Write the log text to a file
 
-            return Console.Out.WriteLineAsync(logText);       // Write the log text to the console
+                return Console.Out.WriteLineAsync(logText);       // Write the log text to the console
+            }
+            catch (Exception ex)
+            {
+                return Console.Out.WriteLineAsync(ex.ToString());
+            }
         }
     }
 }
