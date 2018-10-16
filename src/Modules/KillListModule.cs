@@ -188,16 +188,16 @@ namespace Luci.Modules
                     switch (selection)
                     {
                         case 0:
-                            response = string.Format("Those pussies {0} have {1} kills.", clan, result);
+                            response = string.Format("Those dipshits {0} have {1} kills.", clan, result);
                             break;
                         case 1:
-                            response = string.Format("Those bitches {0} have {1} kills.", clan, result);
+                            response = string.Format("Those losers {0} have {1} kills.", clan, result);
                             break;
                         case 2:
                             response = string.Format("Those dicks {0} have {1} kills.", clan, result);
                             break;
                         case 3:
-                            response = string.Format("Those crazy fuckers {0} have {1} kills.", clan, result);
+                            response = string.Format("Those crybabies {0} have {1} kills.", clan, result);
                             break;
                         case 4:
                             response = string.Format("Those asshats {0} have {1} kills.", clan, result);
