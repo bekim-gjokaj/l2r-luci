@@ -126,7 +126,7 @@ namespace Luci.Modules
                         break;
 
                     case "PzYcHO":
-                        response = string.Format("Hold my Beer {0} The Queen Bitch has {1} kills.", player, result);
+                        response = string.Format("Hold my beer {0} The Queen Bitch has {1} kills.", player, result);
                         break;
 
                     case "JuggernuttZ":

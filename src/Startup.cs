@@ -81,7 +81,7 @@ namespace Luci
             /* Retrieve the device list  part of initialization*/
             CaptureDeviceList devices = CaptureDeviceList.Instance;
             int iface = L2RPacketService.Initialization(Kamael.Globals.args);
-            ICaptureDevice device = CaptureDeviceList.Instance[0];
+            ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(Configuration["packets:interface"])];
             //Register our handler function to the 'packet arrival' event
             device.OnPacketArrival +=
                 new PacketArrivalEventHandler(PacketHandlerService.PacketCapturer);
