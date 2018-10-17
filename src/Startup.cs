@@ -10,6 +10,7 @@ using Quartz;
 using Quartz.Impl;
 using SharpPcap;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Luci
@@ -17,33 +18,18 @@ namespace Luci
     public class Startup
     {
         public IConfigurationRoot Configuration { get; }
+        public PacketService PacketSvc;
 
         public Startup(string[] args)
         {
             IConfigurationBuilder builder = new ConfigurationBuilder();        // Create a new instance of the config builder
             System.Collections.IDictionary env = Environment.GetEnvironmentVariables();
             builder.SetBasePath(AppContext.BaseDirectory);      // Specify the default location for the config file
-
-            string hostingEnv = (string)env["Hosting:Environment"];
-            if (hostingEnv == "Bekim")
-            {
-                builder.AddJsonFile("_configuration.Bekim.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
-            }
-            else if (hostingEnv == "Tiffany")
-            {
-                builder.AddJsonFile("_configuration.Tiffany.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
-            }
-            else
-            {
-                builder.AddJsonFile("_configuration.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
-            }
-
+            SelectConfiguFiles(builder, env);
             Configuration = builder.Build();                // Build the configuration
-
             builder.AddEnvironmentVariables();
             ConfigService._configuration = Configuration;
         }
-
         public static async Task RunAsync(string[] args)
         {
             Kamael.Globals.args = args;
@@ -55,7 +41,6 @@ namespace Luci
         {
             ServiceCollection services = new ServiceCollection();             // Create a new instance of a service collection
             ConfigureServicesAsync(services);
-
             ServiceProvider provider = services.BuildServiceProvider();     // Build the service provider
             provider.GetRequiredService<LoggingService>();      // Start the logging service
             provider.GetRequiredService<CommandHandler>();      // Start the command handler service
@@ -64,6 +49,20 @@ namespace Luci
             await provider.GetRequiredService<L2RPacketService>().StartAsync(ConfigureDevice());       // Start the packet service
 
             await Task.Delay(-1);                               // Keep the program alive
+        }
+
+
+        private static void SelectConfiguFiles(IConfigurationBuilder builder, System.Collections.IDictionary env)
+        {
+            string hostingEnv = (string)env["Hosting:Environment"];
+
+            if (hostingEnv == "Bekim")
+                builder.AddJsonFile("_configuration.Bekim.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+            else if (hostingEnv == "Tiffany")
+                builder.AddJsonFile("_configuration.Tiffany.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+            else
+                builder.AddJsonFile("_configuration.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+
         }
 
         private async void ConfigureServicesAsync(IServiceCollection services)
@@ -76,7 +75,8 @@ namespace Luci
 
             L2RPacketService packetLogger = new L2RPacketService();
             KillListService killList = new KillListService();
-            PacketService packetHandler = new PacketService(discord, killList, Configuration);
+            PacketService packetService = new PacketService(discord, killList, Configuration);
+            PacketSvc = packetService;
             await UtilService.StartAsync(discord, killList, Configuration);
 
             services.AddSingleton(discord)
@@ -91,70 +91,55 @@ namespace Luci
                         .AddSingleton<CommandHandler>()         // Add loggingservice to the collection
                         .AddSingleton<Random>()                 // Add random to the collection
                         .AddSingleton(packetLogger)             // Add packetLogger to the collection
-                        .AddSingleton(packetHandler)            // Add packetHandler to the collection
+                        .AddSingleton(packetService)            // Add packetService to the collection
                         .AddSingleton(Configuration)            // Add the configuration to the collection
                         .AddSingleton(killList);                // Add the killList to the collection
+
+            
 
             await InitializeScheduler();
         }
 
         private static async Task InitializeScheduler()
         {
+            
             // construct a scheduler factory
             ISchedulerFactory schedFact = new StdSchedulerFactory();
             IScheduler sched = await schedFact.GetScheduler();
             await sched.Start();
 
-            /*********************************************************
-            // SERVER RESET ALERT JOB
-            *********************************************************/
 
-            IJobDetail jobAlertServerReset = JobBuilder.CreateForAsync<JobAlertServerReset>()
-                    .WithIdentity("JobAlertServerReset", "group1")
+            Dictionary<string, object> JobList = new Dictionary<string, object>();
+            JobList.Add("JobAlertServerReset", new JobAlertServerReset());
+            JobList.Add("JobAlertCastleSeige", new JobAlertCastleSeige());
+            JobList.Add("JobAlertFortSiege", new JobAlertFortSiege());
+            int counter = 1;
+
+            foreach(var key in JobList.Keys)
+            {
+
+                /*********************************************************
+                // SERVER RESET ALERT JOB
+                *********************************************************/
+
+                IJobDetail jobAlert = JobBuilder.Create(JobList[key].GetType())
+                        .WithIdentity("Job" + counter, "group1")
+                        .Build();
+
+                ITrigger triggerAlert = TriggerBuilder.Create()
+                    .WithIdentity("Trigger" + counter, "group1")
+                    .WithCronSchedule("30 12 * * * ?")
+                    .ForJob("Job" + counter, "group1")
                     .Build();
 
-            ITrigger triggerAlertServerReset = TriggerBuilder.Create()
-                .WithIdentity("TriggerAlertServerReset", "group1")
-                .WithCronSchedule("30 12 * * * ?")
-                .ForJob("JobAlertServerReset", "group1")
-                .Build();
-
-            // Schedule the job using the job and trigger
-            await sched.ScheduleJob(jobAlertServerReset, triggerAlertServerReset);
-
-            /*********************************************************
-            // CASTLE SEIGE ALERT JOB
-            *********************************************************/
-
-            IJobDetail jobAlertCastleSeige = JobBuilder.CreateForAsync<JobAlertCastleSeige>()
-                    .WithIdentity("JobAlertCastleSeige", "group1")
-                    .Build();
-
-            ITrigger triggerAlertCastleSeige = TriggerBuilder.Create()
-                .WithIdentity("TriggerAlertCastleSeige", "group1")
-                .WithCronSchedule("30 4 * * 7 ?")
-                .ForJob("JobAlertCastleSeige", "group1")
-                .Build();
-
-            // Schedule the job using the job and trigger
-            await sched.ScheduleJob(jobAlertCastleSeige, triggerAlertCastleSeige);
-
-            /*********************************************************
-            // FORT SEIGE ALERT JOB
-            *********************************************************/
-            IJobDetail jobAlertFortSiege = JobBuilder.CreateForAsync<JobAlertFortSiege>()
-                    .WithIdentity("JobAlertFortSiege", "group1")
-                    .Build();
-
-            ITrigger triggerAlertFortSiege = TriggerBuilder.Create()
-                .WithIdentity("TriggerAlertFortSiege", "group1")
-                .WithCronSchedule("30 4 * * 5 ?")
-                .ForJob("JobAlertFortSiege", "group1")
-                .Build();
-
-            // Schedule the job using the job and trigger
-            await sched.ScheduleJob(jobAlertFortSiege, triggerAlertFortSiege);
+                // Schedule the job using the job and trigger
+                await sched.ScheduleJob(jobAlert, triggerAlert);
+                counter++;
+            }
+            
         }
+
+        public delegate int MyDelegate (string s);
 
         private ICaptureDevice ConfigureDevice()
         {
@@ -164,7 +149,7 @@ namespace Luci
             ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(Configuration["packets:interface"])];
             //Register our handler function to the 'packet arrival' event
             device.OnPacketArrival +=
-                new PacketArrivalEventHandler(PacketService.PacketCapturer);
+                new PacketArrivalEventHandler(PacketSvc.PacketCapturer);
             return device;
         }
     }

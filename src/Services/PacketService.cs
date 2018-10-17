@@ -28,7 +28,7 @@ namespace Luci.Services
         }
 
 
-        private static async Task<IL2RPacket> ProcessPackets(byte[] payloadData)
+        private async Task<IL2RPacket> ProcessPackets(byte[] payloadData)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace Luci.Services
         }
 
 
-        public static async Task<SocketUser> FindUser(string Name)
+        public async Task<SocketUser> FindUser(string Name)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace Luci.Services
             }
         }
 
-        public static async Task NotifyKill(PacketClanMemberKillNotify kill)
+        public async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
             KillListItem killItem = await KillListService.ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
 
@@ -158,7 +158,7 @@ namespace Luci.Services
                 }
             }
         }
-        public static async Task NotifyClanChat(PacketChatGuildListReadResult chat)
+        public async Task NotifyClanChat(PacketChatGuildListReadResult chat)
         {
 
             string builder = string.Format(":speech_balloon: ***{0}:\t\t*** **{1}** _\t@ {2}_", chat.PlayerName, chat.Message, DateTime.Now);
@@ -176,7 +176,7 @@ namespace Luci.Services
             }
         }
 
-        public static async void PacketCapturer(object sender, CaptureEventArgs e)
+        public async void PacketCapturer(object sender, CaptureEventArgs e)
         {
             DateTime time = e.Packet.Timeval.Date;
             int len = e.Packet.Data.Length;
