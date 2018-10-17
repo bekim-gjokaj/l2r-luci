@@ -31,6 +31,8 @@ namespace Luci
             public string Description { get; set; }
             public string Reward { get; set; }
             public Dictionary<string, int> Log { get; set; }
+            public KillListType Type { get; set; }
+            public DateTime Expiration { get; set; }
 
         }
         public class KillListItem
@@ -156,17 +158,36 @@ namespace Luci
             }
         }
 
-        public static async Task<Dictionary<string, Bounty>> AddBountyAsync(string Player, string Description, string Reward)
+        public static async Task<Dictionary<string, Bounty>> AddBountyAsync(string Player, string Description, string Reward, DateTime Expiration, string Type)
         {
             try
             {
+                DateTime tmpExp = DateTime.Today.AddDays(7);
+                if(Expiration != null)
+                {
+                    tmpExp = Expiration;
+                }
+
+                KillListType tmpType;
+                if(Type == "Clan")
+                {
+                    tmpType = KillListType.Clan;
+                }
+                else
+                {
+                    tmpType = KillListType.Personal;
+                }
+
+
                 Bounty bounty = new Bounty
                 {
                     BountyID = new Guid(),
                     PlayerName = Player,
                     Description = Description,
                     Reward = Reward,
-                    Log = new Dictionary<string, int>()
+                    Log = new Dictionary<string, int>(),
+                    Type = tmpType,
+                    Expiration = tmpExp
                 };
 
                 BountyList.Add(Player, bounty);
