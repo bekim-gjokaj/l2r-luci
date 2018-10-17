@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
     <PackageReference Include="PacketDotNet" Version="0.19.1" />
+    <PackageReference Include="Quartz" Version="3.0.7" />
     <PackageReference Include="SharpPcap" Version="4.5.0" />
   </ItemGroup>
 

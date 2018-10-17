@@ -2,9 +2,12 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Kamael.Packets;
+using Luci.Jobs;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
+using Quartz.Impl;
 using SharpPcap;
 using System;
 using System.Threading.Tasks;
@@ -18,22 +21,21 @@ namespace Luci
         public Startup(string[] args)
         {
             IConfigurationBuilder builder = new ConfigurationBuilder();        // Create a new instance of the config builder
-            var env = Environment.GetEnvironmentVariables();
+            System.Collections.IDictionary env = Environment.GetEnvironmentVariables();
+            builder.SetBasePath(AppContext.BaseDirectory);      // Specify the default location for the config file
+
             string hostingEnv = (string)env["Hosting:Environment"];
             if (hostingEnv == "Bekim")
             {
-                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
-                .AddJsonFile("_configuration.Bekim.json");        // Add this (json encoded) file to the configuration
+                builder.AddJsonFile("_configuration.Bekim.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
             else if (hostingEnv == "Tiffany")
             {
-                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
-                .AddJsonFile("_configuration.Tiffany.json");        // Add this (json encoded) file to the configuration
+                builder.AddJsonFile("_configuration.Tiffany.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
-            else 
+            else
             {
-                builder.SetBasePath(AppContext.BaseDirectory)      // Specify the default location for the config file
-                .AddJsonFile("_configuration.json");        // Add this (json encoded) file to the configuration
+                builder.AddJsonFile("_configuration.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
 
             Configuration = builder.Build();                // Build the configuration
@@ -52,7 +54,7 @@ namespace Luci
         public async Task RunAsync()
         {
             ServiceCollection services = new ServiceCollection();             // Create a new instance of a service collection
-            ConfigureServices(services);
+            ConfigureServicesAsync(services);
 
             ServiceProvider provider = services.BuildServiceProvider();     // Build the service provider
             provider.GetRequiredService<LoggingService>();      // Start the logging service
@@ -64,7 +66,7 @@ namespace Luci
             await Task.Delay(-1);                               // Keep the program alive
         }
 
-        private void ConfigureServices(IServiceCollection services)
+        private async void ConfigureServicesAsync(IServiceCollection services)
         {
             DiscordSocketClient discord = new DiscordSocketClient(new DiscordSocketConfig
             {                                       // Add discord to the collection
@@ -75,6 +77,7 @@ namespace Luci
             L2RPacketService packetLogger = new L2RPacketService();
             KillListService killList = new KillListService();
             PacketHandlerService packetHandler = new PacketHandlerService(discord, killList, Configuration);
+            await UtilService.StartAsync(discord, killList, Configuration);
 
             services.AddSingleton(discord)
                         .AddSingleton(new CommandService(new CommandServiceConfig
@@ -91,6 +94,86 @@ namespace Luci
                         .AddSingleton(packetHandler)            // Add packetHandler to the collection
                         .AddSingleton(Configuration)            // Add the configuration to the collection
                         .AddSingleton(killList);                // Add the killList to the collection
+
+            await InitializeScheduler();
+        }
+
+        private static async Task InitializeScheduler()
+        {
+            // construct a scheduler factory
+            ISchedulerFactory schedFact = new StdSchedulerFactory();
+            // get a scheduler, start the schedular before triggers or anything else
+            IScheduler sched = await schedFact.GetScheduler();
+            await sched.Start();
+
+            /*********************************************************
+            // SERVER RESET ALERT JOB
+            *********************************************************/
+            try
+            {
+                IJobDetail job = JobBuilder.CreateForAsync<JobAlertServerReset>()
+                        .WithIdentity("JobAlertServerReset", "group1")
+                        .Build();
+
+                ITrigger trigger = TriggerBuilder.Create()
+                    .WithIdentity("TriggerAlertServerReset", "group1")
+                    .WithCronSchedule("30 12 * * *")
+                    .ForJob("JobAlertServerReset", "group1")
+                    .Build();
+
+                // Schedule the job using the job and trigger
+                await sched.ScheduleJob(job, trigger);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            /*********************************************************
+            // CASTLE SEIGE ALERT JOB
+            *********************************************************/
+            try
+            {
+                IJobDetail job = JobBuilder.CreateForAsync<JobAlertCastleSeige>()
+                        .WithIdentity("JobAlertCastleSeige", "group1")
+                        .Build();
+
+                ITrigger trigger = TriggerBuilder.Create()
+                    .WithIdentity("TriggerAlertCastleSeige", "group1")
+                    .WithCronSchedule("30 4 * * 7")
+                    .ForJob("JobAlertCastleSeige", "group1")
+                    .Build();
+
+                // Schedule the job using the job and trigger
+                await sched.ScheduleJob(job, trigger);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            /*********************************************************
+            // FORT SEIGE ALERT JOB
+            *********************************************************/
+            try
+            {
+                IJobDetail job = JobBuilder.CreateForAsync<JobAlertFortSiege>()
+                        .WithIdentity("JobAlertFortSiege", "group1")
+                        .Build();
+
+                ITrigger trigger = TriggerBuilder.Create()
+                    .WithIdentity("TriggerAlertFortSiege", "group1")
+                    .WithCronSchedule("30 4 * * 5")
+                    .ForJob("JobAlertFortSiege", "group1")
+                    .Build();
+
+                // Schedule the job using the job and trigger
+                await sched.ScheduleJob(job, trigger);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         private ICaptureDevice ConfigureDevice()
