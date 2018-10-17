@@ -39,12 +39,12 @@ namespace Luci.Services
                 if (l2rPacket is PacketClanMemberKillNotify && _config["killlist:enabled"] == "true")
                 {
                     //NOTIFY KILL
-                    await NotifyKill((PacketClanMemberKillNotify)l2rPacket);
+                    await UtilService.NotifyKill((PacketClanMemberKillNotify)l2rPacket);
                 }
                 else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
                 {
                     //NOTIFY CLAN CHAT
-                    await NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
+                    await UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
                 }
 
                 return l2rPacket;

@@ -19,7 +19,7 @@ namespace Luci.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             string builder = string.Format("Server reset is in 30 minutes!!");
-            await UtilService.SendMessage(builder, "announcements");
+            await UtilService.SendMessage(builder, "clan-announcements");
         }
 
 

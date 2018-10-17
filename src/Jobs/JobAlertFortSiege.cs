@@ -19,7 +19,7 @@ namespace Luci.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             string builder = string.Format("Fort siege in 2 hours!! Get online!!");
-            await UtilService.SendMessage(builder, "announcements");
+            await UtilService.SendMessage(builder, "clan-announcements");
         }
 
 

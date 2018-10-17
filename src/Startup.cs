@@ -110,16 +110,16 @@ namespace Luci
 
 
             Dictionary<string, object> JobList = new Dictionary<string, object>();
-            JobList.Add("JobAlertServerReset", new JobAlertServerReset());
-            JobList.Add("JobAlertCastleSeige", new JobAlertCastleSeige());
-            JobList.Add("JobAlertFortSiege", new JobAlertFortSiege());
+            JobList.Add("30 12 * * * ?", new JobAlertServerReset());
+            JobList.Add("30 12 * * * ?", new JobAlertCastleSeige());
+            JobList.Add("30 12 * * * ?", new JobAlertFortSiege());
             int counter = 1;
 
             foreach(var key in JobList.Keys)
             {
 
                 /*********************************************************
-                // SERVER RESET ALERT JOB
+                // ALERT JOBS
                 *********************************************************/
 
                 IJobDetail jobAlert = JobBuilder.Create(JobList[key].GetType())
@@ -128,7 +128,7 @@ namespace Luci
 
                 ITrigger triggerAlert = TriggerBuilder.Create()
                     .WithIdentity("Trigger" + counter, "group1")
-                    .WithCronSchedule("30 12 * * * ?")
+                    .WithCronSchedule(key)
                     .ForJob("Job" + counter, "group1")
                     .Build();
 
@@ -139,7 +139,6 @@ namespace Luci
             
         }
 
-        public delegate int MyDelegate (string s);
 
         private ICaptureDevice ConfigureDevice()
         {

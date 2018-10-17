@@ -1,10 +1,15 @@
 ﻿{
+  "packets": {
+    "interface": 0
+  },
   "prefix": "!",
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
-  "packets": {
-    "interface": 0
+  "fort": {
+    "attendancemsg": "Alright, ROLL CALL! Who's coming to fort this week? Please respond with '**!fort answer yes**', '**!fort answer no**', or '**!fort answer maybe**' and your attendance will be marked.",
+    "attendancechannel": "fortress-siege",
+    "attendanceresponsemsg" :  "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n"
   },
   "killlist": {
     "clanchannel": "pzychos-bot-test",
@@ -18,12 +23,12 @@
     "enabled": "true",
     "specialchannel": "docs-slaughterhouse",
     "specialenabled": "true",
-    "specialformat": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "specialformat": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "specialname": "DocHoliday",
     "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "victoryformat": ":kissing_heart: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+    "victoryformat": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
     "bountyformat": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "bountylistformat" : ":gift: **{0}** :gift: \r\n**Type:**_{3}_ \r\n**Desc:**_{1}_ \r\n**Expiration:**_{4}_ \r\n**Reward:** _{2}_\r\n\r\n"  
+    "bountylistformat" : ":gift:**{0}**:gift: \r\n**Type:**_{3}_ \r\n**Desc:**_{1}_ \r\n**Expiration:**_{4}_ \r\n**Reward:** _{2}_\r\n\r\n"  
   },
 
   "clanchat": {

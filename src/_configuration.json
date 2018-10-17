@@ -1,10 +1,15 @@
 ﻿{
+  "packets": {
+    "interface": 0
+  },
   "prefix": "!",
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
-  "packets": {
-    "interface": 1
+  "fort": {
+    "attendancemsg": "Alright, ROLL CALL! Who's coming to fort this week? Please respond with '*!fort answer yes*', '*!fort answer no*', or '*!fort answer maybe*' and your attendance will be marked.",
+    "attendancechannel": "fortress-siege",
+    "attendanceresponsemsg" :  "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n"
   },
   "killlist": {
     "clanchannel": "pzychos-bot-test",
