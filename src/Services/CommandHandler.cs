@@ -72,7 +72,7 @@ namespace Luci
                 {
                     case 0:
                         eb.ImageUrl = "https://media.giphy.com/media/deDsaGovR3BMiNh45V/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 1:
@@ -81,17 +81,17 @@ namespace Luci
 
                     case 2:
                         eb.ImageUrl = "https://media.giphy.com/media/xtnYGffYPqnm6is6ki/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 3:
                         eb.ImageUrl = "https://media.giphy.com/media/entaMSGWlwnriUkEdr/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 4:
                         eb.ImageUrl = "https://media.giphy.com/media/5bo5M40sbcf8ZIIMxm/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
                 }
             }
@@ -105,22 +105,22 @@ namespace Luci
                 {
                     case 0:
                         eb.ImageUrl = "https://media.giphy.com/media/k7iFqM4WWJcCYPD74u/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 1:
                         eb.ImageUrl = "https://media.giphy.com/media/5gWGpnBMRMSy7oTdl8/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 3:
                         eb.ImageUrl = "https://media.giphy.com/media/kgT4SKnVdOc1ZbtYCu/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 4:
                         eb.ImageUrl = "https://media.giphy.com/media/wZtpAJCNm9KvfHEaPc/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
                 }
             }
@@ -138,17 +138,17 @@ namespace Luci
 
                     case 1:
                         eb.ImageUrl = "https://media.giphy.com/media/2m0nyHcVuwL7faEiU2/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 3:
                         eb.ImageUrl = "https://media.giphy.com/media/8lZd54E7AKEgR8vKe7/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 4:
                         eb.ImageUrl = "https://media.giphy.com/media/fxev9Fgq6xj2l2VXYd/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
                 }
             }
@@ -162,22 +162,22 @@ namespace Luci
                 {
                     case 0:
                         eb.ImageUrl = "https://media.giphy.com/media/2YaJDW5GoEozoSiCSV/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 1:
                         eb.ImageUrl = "https://media.giphy.com/media/41eyam9suuYmQ7Ze0R/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 3:
                         eb.ImageUrl = "https://media.giphy.com/media/7mQJHnBKR8V4Ilepr7/giphy.gif";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
 
                     case 4:
                         eb.ImageUrl = "https://giphy.com/gifs/disenchantment-animation-netflix-3LwMFJ140gG8sD43Lr";
-                        await context.Channel.SendMessageAsync("", false, eb);
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
                         break;
                 }
             }

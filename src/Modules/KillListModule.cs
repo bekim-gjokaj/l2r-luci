@@ -19,7 +19,7 @@ namespace Luci.Modules
         [Summary("Recent Kills")]
         public async Task Recent()
         {
-            IConfiguration _config = ConfigHelper._configuration;
+            IConfiguration _config = ConfigService._configuration;
             string RecentKillList = "```RECENT LIST```";
 
             List<KillListItem> KillLog = await KillListService.GetKillLogAsync();
@@ -81,7 +81,7 @@ namespace Luci.Modules
         {
             try
             {
-                IConfiguration _config = ConfigHelper._configuration;
+                IConfiguration _config = ConfigService._configuration;
                 string RecentKillList = "```BOUNTY LIST```\r\n";
 
                 Dictionary<string, Bounty> bountylist = await KillListService.GetBountyListAsync();
@@ -133,7 +133,7 @@ namespace Luci.Modules
             DateTime Exp = DateTime.Now.AddDays(Convert.ToInt32(Days));
 
 
-            IConfiguration _config = ConfigHelper._configuration;
+            IConfiguration _config = ConfigService._configuration;
             string RecentKillList = "```BOUNTY LIST```";
 
             Dictionary<string, Bounty> bountylist = await KillListService.AddBountyAsync(Player, Description, Reward, Exp, Type);
@@ -245,7 +245,7 @@ namespace Luci.Modules
         [Command("vs")]
         public async Task KillsForSpecificPvP(string P1, string P2)
         {
-            IConfiguration _config = ConfigHelper._configuration;
+            IConfiguration _config = ConfigService._configuration;
             string RecentKillList = "";
             string RecentKillListFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
             int P1Count = 0;
@@ -316,7 +316,7 @@ namespace Luci.Modules
         [Summary("My Kills")]
         public async Task KillCountByClanAsync(string clan)
         {
-            IConfiguration _config = ConfigHelper._configuration;
+            IConfiguration _config = ConfigService._configuration;
             int result = await KillListService.GetCountAsync(clan, KillListType.Clan);
             string response = "";
             bool UseRandom = true;

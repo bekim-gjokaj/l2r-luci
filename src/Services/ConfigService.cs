@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Luci.Services
 {
-    public static class ConfigHelper
+    public static class ConfigService
     {
 
         public static IConfiguration _configuration { get; set; }

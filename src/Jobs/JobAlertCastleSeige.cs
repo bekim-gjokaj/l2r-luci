@@ -18,7 +18,7 @@ namespace Luci.Jobs
         public JobAlertCastleSeige(){ }
         public async Task Execute(IJobExecutionContext context)
         {
-            string builder = string.Format("Fort siege in 2 hours!! Get online!!");
+            string builder = string.Format("Castle siege in 2 hours!! Get online!!");
             await UtilService.SendMessage(builder, "announcements");
         }
 

@@ -12,7 +12,7 @@ using static Luci.KillListService;
 
 namespace Luci.Services
 {
-    public class PacketHandlerService
+    public class PacketService
     {
 
         private static DiscordSocketClient _discord;
@@ -20,7 +20,7 @@ namespace Luci.Services
         private static IConfigurationRoot _config;
 
 
-        public PacketHandlerService(DiscordSocketClient Discord, KillListService KillService, IConfigurationRoot config)
+        public PacketService(DiscordSocketClient Discord, KillListService KillService, IConfigurationRoot config)
         {
             _discord = Discord;
             _killService = KillService;

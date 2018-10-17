@@ -41,7 +41,7 @@ namespace Luci
             Configuration = builder.Build();                // Build the configuration
 
             builder.AddEnvironmentVariables();
-            ConfigHelper._configuration = Configuration;
+            ConfigService._configuration = Configuration;
         }
 
         public static async Task RunAsync(string[] args)
@@ -76,7 +76,7 @@ namespace Luci
 
             L2RPacketService packetLogger = new L2RPacketService();
             KillListService killList = new KillListService();
-            PacketHandlerService packetHandler = new PacketHandlerService(discord, killList, Configuration);
+            PacketService packetHandler = new PacketService(discord, killList, Configuration);
             await UtilService.StartAsync(discord, killList, Configuration);
 
             services.AddSingleton(discord)
@@ -102,78 +102,58 @@ namespace Luci
         {
             // construct a scheduler factory
             ISchedulerFactory schedFact = new StdSchedulerFactory();
-            // get a scheduler, start the schedular before triggers or anything else
             IScheduler sched = await schedFact.GetScheduler();
             await sched.Start();
 
             /*********************************************************
             // SERVER RESET ALERT JOB
             *********************************************************/
-            try
-            {
-                IJobDetail job = JobBuilder.CreateForAsync<JobAlertServerReset>()
-                        .WithIdentity("JobAlertServerReset", "group1")
-                        .Build();
 
-                ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity("TriggerAlertServerReset", "group1")
-                    .WithCronSchedule("30 12 * * *")
-                    .ForJob("JobAlertServerReset", "group1")
+            IJobDetail jobAlertServerReset = JobBuilder.CreateForAsync<JobAlertServerReset>()
+                    .WithIdentity("JobAlertServerReset", "group1")
                     .Build();
 
-                // Schedule the job using the job and trigger
-                await sched.ScheduleJob(job, trigger);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            ITrigger triggerAlertServerReset = TriggerBuilder.Create()
+                .WithIdentity("TriggerAlertServerReset", "group1")
+                .WithCronSchedule("30 12 * * * ?")
+                .ForJob("JobAlertServerReset", "group1")
+                .Build();
+
+            // Schedule the job using the job and trigger
+            await sched.ScheduleJob(jobAlertServerReset, triggerAlertServerReset);
 
             /*********************************************************
             // CASTLE SEIGE ALERT JOB
             *********************************************************/
-            try
-            {
-                IJobDetail job = JobBuilder.CreateForAsync<JobAlertCastleSeige>()
-                        .WithIdentity("JobAlertCastleSeige", "group1")
-                        .Build();
 
-                ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity("TriggerAlertCastleSeige", "group1")
-                    .WithCronSchedule("30 4 * * 7")
-                    .ForJob("JobAlertCastleSeige", "group1")
+            IJobDetail jobAlertCastleSeige = JobBuilder.CreateForAsync<JobAlertCastleSeige>()
+                    .WithIdentity("JobAlertCastleSeige", "group1")
                     .Build();
 
-                // Schedule the job using the job and trigger
-                await sched.ScheduleJob(job, trigger);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            ITrigger triggerAlertCastleSeige = TriggerBuilder.Create()
+                .WithIdentity("TriggerAlertCastleSeige", "group1")
+                .WithCronSchedule("30 4 * * 7 ?")
+                .ForJob("JobAlertCastleSeige", "group1")
+                .Build();
+
+            // Schedule the job using the job and trigger
+            await sched.ScheduleJob(jobAlertCastleSeige, triggerAlertCastleSeige);
 
             /*********************************************************
             // FORT SEIGE ALERT JOB
             *********************************************************/
-            try
-            {
-                IJobDetail job = JobBuilder.CreateForAsync<JobAlertFortSiege>()
-                        .WithIdentity("JobAlertFortSiege", "group1")
-                        .Build();
-
-                ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity("TriggerAlertFortSiege", "group1")
-                    .WithCronSchedule("30 4 * * 5")
-                    .ForJob("JobAlertFortSiege", "group1")
+            IJobDetail jobAlertFortSiege = JobBuilder.CreateForAsync<JobAlertFortSiege>()
+                    .WithIdentity("JobAlertFortSiege", "group1")
                     .Build();
 
-                // Schedule the job using the job and trigger
-                await sched.ScheduleJob(job, trigger);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            ITrigger triggerAlertFortSiege = TriggerBuilder.Create()
+                .WithIdentity("TriggerAlertFortSiege", "group1")
+                .WithCronSchedule("30 4 * * 5 ?")
+                .ForJob("JobAlertFortSiege", "group1")
+                .Build();
+
+            // Schedule the job using the job and trigger
+            await sched.ScheduleJob(jobAlertFortSiege, triggerAlertFortSiege);
         }
 
         private ICaptureDevice ConfigureDevice()
@@ -184,7 +164,7 @@ namespace Luci
             ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(Configuration["packets:interface"])];
             //Register our handler function to the 'packet arrival' event
             device.OnPacketArrival +=
-                new PacketArrivalEventHandler(PacketHandlerService.PacketCapturer);
+                new PacketArrivalEventHandler(PacketService.PacketCapturer);
             return device;
         }
     }
