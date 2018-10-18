@@ -8,7 +8,7 @@ using static Luci.KillListService;
 
 namespace Luci.Modules
 {
-    [Name("Fort"), Group("Fort")]
+    [Name("Fort")]
     [Summary("Fort Actions")]
     public class FortModule : ModuleBase<SocketCommandContext>
     {

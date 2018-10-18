@@ -30,6 +30,7 @@ namespace Luci
             builder.AddEnvironmentVariables();
             ConfigService._configuration = Configuration;
         }
+
         public static async Task RunAsync(string[] args)
         {
             Kamael.Globals.args = args;
@@ -51,18 +52,22 @@ namespace Luci
             await Task.Delay(-1);                               // Keep the program alive
         }
 
-
         private static void SelectConfiguFiles(IConfigurationBuilder builder, System.Collections.IDictionary env)
         {
             string hostingEnv = (string)env["Hosting:Environment"];
 
             if (hostingEnv == "Bekim")
+            {
                 builder.AddJsonFile("_configuration.Bekim.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+            }
             else if (hostingEnv == "Tiffany")
+            {
                 builder.AddJsonFile("_configuration.Tiffany.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+            }
             else
+            {
                 builder.AddJsonFile("_configuration.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
-
+            }
         }
 
         private async void ConfigureServicesAsync(IServiceCollection services)
@@ -79,6 +84,12 @@ namespace Luci
             PacketSvc = packetService;
             await UtilService.StartAsync(discord, killList, Configuration);
 
+
+            services.AddSingleton(packetLogger);             // Add packetLogger to the collection
+            services.AddSingleton(packetService);            // Add packetService to the collection
+            services.AddSingleton(Configuration);            // Add the configuration to the collection
+            services.AddSingleton(killList);                // Add the killList to the collection
+
             services.AddSingleton(discord)
                         .AddSingleton(new CommandService(new CommandServiceConfig
                         {                                       // Add the command service to the collection
@@ -89,35 +100,28 @@ namespace Luci
                         .AddSingleton<StartupService>()         // Add startupservice to the collection
                         .AddSingleton<LoggingService>()         // Add loggingservice to the collection
                         .AddSingleton<CommandHandler>()         // Add loggingservice to the collection
-                        .AddSingleton<Random>()                 // Add random to the collection
-                        .AddSingleton(packetLogger)             // Add packetLogger to the collection
-                        .AddSingleton(packetService)            // Add packetService to the collection
-                        .AddSingleton(Configuration)            // Add the configuration to the collection
-                        .AddSingleton(killList);                // Add the killList to the collection
-
-            
+                        .AddSingleton<Random>();                 // Add random to the collection
 
             await InitializeScheduler();
         }
 
         private static async Task InitializeScheduler()
         {
-            
             // construct a scheduler factory
             ISchedulerFactory schedFact = new StdSchedulerFactory();
             IScheduler sched = await schedFact.GetScheduler();
             await sched.Start();
 
-
-            Dictionary<string, object> JobList = new Dictionary<string, object>();
-            JobList.Add("30 12 * * * ?", new JobAlertServerReset());
-            JobList.Add("30 12 * * * ?", new JobAlertCastleSeige());
-            JobList.Add("30 12 * * * ?", new JobAlertFortSiege());
+            Dictionary<string, object> JobList = new Dictionary<string, object>
+            {
+                { "0 30 0 * * ?", new JobAlertServerReset() },
+                { "0 30 18 ? * 7", new JobAlertCastleSeige() },
+                { "0 30 16 ? * 5", new JobAlertFortSiege() }
+            };
             int counter = 1;
 
-            foreach(var key in JobList.Keys)
+            foreach (string key in JobList.Keys)
             {
-
                 /*********************************************************
                 // ALERT JOBS
                 *********************************************************/
@@ -136,9 +140,7 @@ namespace Luci
                 await sched.ScheduleJob(jobAlert, triggerAlert);
                 counter++;
             }
-            
         }
-
 
         private ICaptureDevice ConfigureDevice()
         {
