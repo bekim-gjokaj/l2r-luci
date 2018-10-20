@@ -1,63 +1,60 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using Kamael.Packets;
+using Kamael.Packets.Character;
 using Kamael.Packets.Chat;
 using Kamael.Packets.Clan;
 using Microsoft.Extensions.Configuration;
 using PacketDotNet;
 using SharpPcap;
 using System;
-using System.Threading.Tasks;
-using static Luci.KillListService;
 
 namespace Luci.Services
 {
     public class PacketService
     {
+        //I want to ensure there is only ever 1 L2RPacketService (the packet logger)
+        //I'm going to rely on Dependency injection in Startup.cs to provide
+        //me with a Singleton instance which I am then going to refer to.
+        private L2RPacketService _L2RPacketLogger { get; set; }
 
-        private static DiscordSocketClient _discord;
-        private static KillListService _killService;
-        private static IConfigurationRoot _config;
+        private BountyService _bountyService { get; set; }
+        private FortService _fortService { get; set; }
+        private KillService _killService { get; set; }
+        private DiscordSocketClient _discord { get; set; }
+        private IConfiguration _config { get; set; }
 
-
-        public PacketService(DiscordSocketClient Discord, KillListService KillService, IConfigurationRoot config)
+        public PacketService(L2RPacketService L2RPacketLogger,         //DI should inject my Singleton instance here
+                                BountyService BountyService,
+                                FortService FortService,
+                                KillService KillService,
+                                DiscordSocketClient Discord,
+                                IConfiguration config)
         {
+            _L2RPacketLogger = L2RPacketLogger;
             _discord = Discord;
+            _bountyService = BountyService;
+            _fortService = FortService;
             _killService = KillService;
             _config = config;
+
+            _L2RPacketLogger.StartAsync(InitializeDevice()).Wait();
         }
 
-
-        private async Task<IL2RPacket> ProcessPackets(byte[] payloadData)
+        private ICaptureDevice InitializeDevice()
         {
-            try
-            {
-                //L2RPacketService proceesses the incoming payload and translates it to a concrete class
-                IL2RPacket l2rPacket = L2RPacketService.AppendIncomingData(payloadData);
+            /* Retrieve the device list  part of initialization*/
+            CaptureDeviceList devices = CaptureDeviceList.Instance;
+            int iface = L2RPacketService.Initialization(Kamael.Globals.args);
+            ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(_config["packets:interface"])];
 
+            //Register our handler function to the 'packet arrival' event
+            //This uses a Delegate to pass a reference to PacketCapturer() below
+            device.OnPacketArrival += new PacketArrivalEventHandler(PacketCapturer);
 
-                if (l2rPacket is PacketClanMemberKillNotify && _config["killlist:enabled"] == "true")
-                {
-                    //NOTIFY KILL
-                    await UtilService.NotifyKill((PacketClanMemberKillNotify)l2rPacket);
-                }
-                else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
-                {
-                    //NOTIFY CLAN CHAT
-                    await UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
-                }
-
-                return l2rPacket;
-            }
-            catch (Exception ex)
-            {
-                //Console.WriteLine(ex.ToString());
-                return null;
-            }
+            return device;
         }
 
-
-        public async void PacketCapturer(object sender, CaptureEventArgs e)
+        public void PacketCapturer(object sender, CaptureEventArgs e)
         {
             DateTime time = e.Packet.Timeval.Date;
             int len = e.Packet.Data.Length;
@@ -79,13 +76,39 @@ namespace Luci.Services
                 //time.Hour, time.Minute, time.Second, time.Millisecond, len,
                 //srcIp, srcPort, dstIp, dstPort);
 
-                // Decrypt and process incoming packets
+                //process incoming packets
                 if (srcPort == 12000)
                 {
-                    l2rPacket = await ProcessPackets(payloadData);
+                    l2rPacket = ProcessPackets(payloadData);
                 }
             }
         }
 
+        private IL2RPacket ProcessPackets(byte[] payloadData)
+        {
+            try
+            {
+                //L2RPacketService proceesses the incoming payload and translates it to a concrete class
+                IL2RPacket l2rPacket = L2RPacketService.AppendIncomingData(payloadData);
+                if (l2rPacket is PacketPlayerKillNotify)
+                {
+                    //NOTIFY KILL
+                    _killService.NotifyKill((PacketPlayerKillNotify)l2rPacket).Wait();
+                    
+                }
+                else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
+                {
+                    //NOTIFY CLAN CHAT
+                    UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket).Wait();
+                }
+
+                return l2rPacket;
+            }
+            catch (Exception)
+            {
+                //Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
     }
 }

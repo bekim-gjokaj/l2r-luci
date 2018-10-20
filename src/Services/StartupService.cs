@@ -12,13 +12,13 @@ namespace Luci
     {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
-        private readonly IConfigurationRoot _config;
+        private readonly IConfiguration _config;
 
-        // DiscordSocketClient, CommandService, and IConfigurationRoot are injected automatically from the IServiceProvider
+        // DiscordSocketClient, CommandService, and IConfiguration are injected automatically from the IServiceProvider
         public StartupService(
             DiscordSocketClient discord,
             CommandService commands,
-            IConfigurationRoot config)
+            IConfiguration config)
         {
             _config = config;
             _discord = discord;

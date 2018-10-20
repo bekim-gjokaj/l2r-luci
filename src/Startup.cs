@@ -2,75 +2,85 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Kamael.Packets;
-using Luci.Jobs;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Quartz;
-using Quartz.Impl;
-using SharpPcap;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Luci
 {
     public class Startup
     {
-        public IConfigurationRoot Configuration { get; }
-        public PacketService PacketSvc;
+        public IConfiguration _config { get; set; }
 
         public Startup(string[] args)
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder();        // Create a new instance of the config builder
-            System.Collections.IDictionary env = Environment.GetEnvironmentVariables();
-            builder.SetBasePath(AppContext.BaseDirectory);      // Specify the default location for the config file
-            SelectConfiguFiles(builder, env);
-            Configuration = builder.Build();                // Build the configuration
-            builder.AddEnvironmentVariables();
-            ConfigService._configuration = Configuration;
+            IConfigurationBuilder builder = new ConfigurationBuilder();                     // Create a new instance of the config builder
+            System.Collections.IDictionary env = Environment.GetEnvironmentVariables();     // Get the environment variables
+            builder.SetBasePath(AppContext.BaseDirectory);                                  // Specify the default location for the config file
+            builder = SelectConfigureFilesAsync(builder, env);                                               // Select custom config.json files for Bekim or Tiff
+            _config = builder.Build();                                                // Build the configuration
         }
 
-        public static async Task RunAsync(string[] args)
-        {
-            Kamael.Globals.args = args;
-            Startup startup = new Startup(args);
-            await startup.RunAsync();
-        }
-
-        public async Task RunAsync()
-        {
-            ServiceCollection services = new ServiceCollection();             // Create a new instance of a service collection
-            ConfigureServicesAsync(services);
-            ServiceProvider provider = services.BuildServiceProvider();     // Build the service provider
-            provider.GetRequiredService<LoggingService>();      // Start the logging service
-            provider.GetRequiredService<CommandHandler>();      // Start the command handler service
-            await provider.GetRequiredService<KillListService>().StartAsync();       // Start the startup service
-            await provider.GetRequiredService<StartupService>().StartAsync();       // Start the startup service
-            await provider.GetRequiredService<L2RPacketService>().StartAsync(ConfigureDevice());       // Start the packet service
-
-            await Task.Delay(-1);                               // Keep the program alive
-        }
-
-        private static void SelectConfiguFiles(IConfigurationBuilder builder, System.Collections.IDictionary env)
+        private IConfigurationBuilder SelectConfigureFilesAsync(IConfigurationBuilder builder, System.Collections.IDictionary env)
         {
             string hostingEnv = (string)env["Hosting:Environment"];
 
             if (hostingEnv == "Bekim")
             {
-                builder.AddJsonFile("_configuration.Bekim.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+                builder.AddJsonFile("_configuration.Bekim.json", optional: true, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
             else if (hostingEnv == "Tiffany")
             {
-                builder.AddJsonFile("_configuration.Tiffany.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
+                builder.AddJsonFile("_configuration.Tiffany.json", optional: true, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
             else
             {
                 builder.AddJsonFile("_configuration.json", optional: false, reloadOnChange: true);        // Add this (json encoded) file to the configuration
             }
+
+            return builder;
         }
 
-        private async void ConfigureServicesAsync(IServiceCollection services)
+        
+        public static async Task RunAsync(string[] args) //Wrapper function for grabbing the args
+        {
+            Kamael.Globals.args = args;
+            Startup startup = new Startup(args);
+            //Continue to RunAsync below
+            await startup.RunAsync();
+        }
+
+        public async Task RunAsync()
+        {
+            //Create a new instance of a service collection
+            //This is the main dependency injection container
+            ServiceCollection services = new ServiceCollection();
+            await ConfigureServicesAsync(services);
+
+            //Start the services using dependency injection
+            ServiceProvider provider = services.BuildServiceProvider();
+            provider.GetRequiredService<LoggingService>();
+            provider.GetRequiredService<CommandHandler>();
+            provider.GetRequiredService<KillService>();
+            provider.GetRequiredService<BountyService>();
+            provider.GetRequiredService<FortService>();
+            provider.GetRequiredService<L2RPacketService>();    //The packet logger dll
+            provider.GetRequiredService<PacketService>();       //The packet service for interpretting the packets
+
+            await provider.GetRequiredService<SchedulerService>().StartAsync();
+
+            
+
+            //.StartAsync(); at the end is what kicks off the console app to start
+            await provider.GetRequiredService<StartupService>().StartAsync();
+
+            // Keep the program alive
+            await Task.Delay(-1);
+        }
+
+        private async Task ConfigureServicesAsync(IServiceCollection services)
         {
             DiscordSocketClient discord = new DiscordSocketClient(new DiscordSocketConfig
             {                                       // Add discord to the collection
@@ -78,17 +88,15 @@ namespace Luci
                 MessageCacheSize = 1000             // Cache 1,000 messages per channel
             });
 
-            L2RPacketService packetLogger = new L2RPacketService();
-            KillListService killList = new KillListService();
-            PacketService packetService = new PacketService(discord, killList, Configuration);
-            PacketSvc = packetService;
-            await UtilService.StartAsync(discord, killList, Configuration);
+            //L2RPacketService packetLogger = new L2RPacketService();
+            //BountyService Bounty = new BountyService(Configuration);
+            //FortService Fort = new FortService(Configuration);
+            //KillService Kills = new KillService(Configuration, Bounty);
 
-
-            services.AddSingleton(packetLogger);             // Add packetLogger to the collection
-            services.AddSingleton(packetService);            // Add packetService to the collection
-            services.AddSingleton(Configuration);            // Add the configuration to the collection
-            services.AddSingleton(killList);                // Add the killList to the collection
+            //services.AddSingleton(packetLogger);             // Add packetLogger to the collection
+            //services.AddSingleton(packetService);            // Add packetService to the collection
+            //services.AddSingleton(Configuration);            // Add the configuration to the collection
+            //services.AddSingleton(Kills);                    // Add the Kills to the collection
 
             services.AddSingleton(discord)
                         .AddSingleton(new CommandService(new CommandServiceConfig
@@ -97,61 +105,20 @@ namespace Luci
                             DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
                             CaseSensitiveCommands = false       // Ignore case when executing commands
                         }))
-                        .AddSingleton<StartupService>()         // Add startupservice to the collection
-                        .AddSingleton<LoggingService>()         // Add loggingservice to the collection
-                        .AddSingleton<CommandHandler>()         // Add loggingservice to the collection
-                        .AddSingleton<Random>();                 // Add random to the collection
+                        .AddSingleton<StartupService>()
+                        .AddSingleton<IConfiguration>(_config)
+                        .AddSingleton<LoggingService>()
+                        .AddSingleton<CommandHandler>()
+                        .AddSingleton<Random>()
+                        .AddSingleton<BountyService>()
+                        .AddSingleton<FortService>()
+                        .AddSingleton<KillService>()
+                        .AddSingleton<SchedulerService>()
+                        .AddSingleton<L2RPacketService>()
+                        .AddSingleton<PacketService>();
 
-            await InitializeScheduler();
-        }
-
-        private static async Task InitializeScheduler()
-        {
-            // construct a scheduler factory
-            ISchedulerFactory schedFact = new StdSchedulerFactory();
-            IScheduler sched = await schedFact.GetScheduler();
-            await sched.Start();
-
-            Dictionary<string, object> JobList = new Dictionary<string, object>
-            {
-                { "0 30 0 * * ?", new JobAlertServerReset() },
-                { "0 30 18 ? * 7", new JobAlertCastleSeige() },
-                { "0 30 16 ? * 5", new JobAlertFortSiege() }
-            };
-            int counter = 1;
-
-            foreach (string key in JobList.Keys)
-            {
-                /*********************************************************
-                // ALERT JOBS
-                *********************************************************/
-
-                IJobDetail jobAlert = JobBuilder.Create(JobList[key].GetType())
-                        .WithIdentity("Job" + counter, "group1")
-                        .Build();
-
-                ITrigger triggerAlert = TriggerBuilder.Create()
-                    .WithIdentity("Trigger" + counter, "group1")
-                    .WithCronSchedule(key)
-                    .ForJob("Job" + counter, "group1")
-                    .Build();
-
-                // Schedule the job using the job and trigger
-                await sched.ScheduleJob(jobAlert, triggerAlert);
-                counter++;
-            }
-        }
-
-        private ICaptureDevice ConfigureDevice()
-        {
-            /* Retrieve the device list  part of initialization*/
-            CaptureDeviceList devices = CaptureDeviceList.Instance;
-            int iface = L2RPacketService.Initialization(Kamael.Globals.args);
-            ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(Configuration["packets:interface"])];
-            //Register our handler function to the 'packet arrival' event
-            device.OnPacketArrival +=
-                new PacketArrivalEventHandler(PacketSvc.PacketCapturer);
-            return device;
+            //await UtilService.StartAsync(discord, _config);
         }
     }
+    
 }

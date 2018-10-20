@@ -1,107 +1,91 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Luci.Models.Enums;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Luci.KillListService;
+using static Luci.KillService;
 
 namespace Luci.Modules
 {
     [Name("Fort")]
-    [Summary("Fort Actions")]
+    [Summary("Commands for maintaining fort attendance, teams, and reminders")]
     public class FortModule : ModuleBase<SocketCommandContext>
     {
 
-        public SortedDictionary<string, string> dictFortRespYes = new SortedDictionary<string, string>();
-        public SortedDictionary<string, string> dictFortRespNo = new SortedDictionary<string, string>();
-        public SortedDictionary<string, string> dictFortRespMaybe = new SortedDictionary<string, string>();
+        private IConfiguration _config { get; set; }
+        private FortService _fort { get; set; }
+        private DiscordSocketClient _discord { get; set; }
 
-
-        /// <summary>
-        /// RECENT
-        /// </summary>
-        /// <returns></returns>
+        public FortModule (IConfiguration config, FortService fort, DiscordSocketClient discord)
+        {
+            _config = config;
+            _fort = fort;
+            _discord = discord;
+        }
+       
         [Command("Ask Attendance")]
-        [Summary("Prompt Luci to start asking who's coming")]
+        [Summary("Prompt Luci to ask who's coming")]
         public async Task Attendance()
         {
-            IConfiguration _config = ConfigService._configuration;
-            await UtilService.SendMessage(_config["fort:attendancemsg"], _config["fort:attendancechannel"]);
+            var guildId = Context.Guild.Id;
+            var channels = Context.Guild.Channels;
+            ulong channelId = new ulong();
+            foreach(var item in channels)
+            {
+                if(item.Name == _config["fort:attendance:channel"])
+                {
+                    channelId = item.Id;
+                }
+            }
+            await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
+            //Luci will send message asking for roll call
+            //ReplyAsync(_config["fort:attendance:msg"], _config["fort:attendance:channel"]);
         }
 
-        /// <summary>
-        /// RECENT
-        /// </summary>
-        /// <returns></returns>
-        [Command("Attendance")]
-        [Summary("Prompt Luci to start asking who's coming")]
-        public async Task<string> AttendanceList()
+        
+        [Command("Fort")]
+        [Summary("Get Luci's current status on the fortress siege")]
+        public async Task Fort()
         {
-            IConfiguration _config = ConfigService._configuration;
-            DateTime today = DateTime.Today;
-            // The (... + 7) % 7 ensures we end up with a value in the range [0, 6]
-            int daysUntilFriday = ((int)DayOfWeek.Friday - (int)today.DayOfWeek + 7) % 7;
-            DateTime nextFriday = today.AddDays(daysUntilFriday);
+            //Get attendance list
+            var result = await _fort.GetEmbedAsync();
+            
+            await ReplyAsync("", false, result);
 
-
-            string output = string.Format("```Attendance for Fort Siege ({0})\r\n***YES:***", nextFriday.ToShortDateString());
-            foreach (var item in dictFortRespYes)
-            {
-                output += String.Format("* {0}\r\n", item.Key);
-            }
-
-            output += "\r\n***NO:***";
-
-            foreach (var item in dictFortRespNo)
-            {
-                output += String.Format("* {0}\r\n", item.Key);
-            }
-            output += "\r\n***MAYBE:***";
-
-            foreach (var item in dictFortRespMaybe)
-            {
-                output += String.Format("* {0}\r\n", item.Key);
-            }
-            output += "\r\n```";
-
-
-            return output;
         }
 
-
-
-        /// <summary>
-        /// RECENT
-        /// </summary>
-        /// <returns></returns>
-        [Command("Answer")]
+        [Command("Fort")]
         [Summary("Respond to fort attendance")]
-        public async Task AttendanceResponse(string Response)
+        public async Task Fort(string Response)
         {
-            IConfiguration _config = ConfigService._configuration;
+            //Initialize variables
+            Embed embed;
+            string response = string.Format(_config["fort:attendance:response"], Response);
 
-
+            //Check response
             switch (Response.ToLower())
             {
                 case "yes":
-                    await UtilService.SendMessage(
-                        String.Format(_config["fort:attendanceresponsemsg"], "yes"), _config["fort:attendancechannel"]);
+                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.Yes);
+                    await ReplyAsync(response, false, embed);
                     break;
 
                 case "no":
-                    await UtilService.SendMessage(
-                        String.Format(_config["fort:attendanceresponsemsg"], "no"), _config["fort:attendancechannel"]);
+                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.No);
+                    await ReplyAsync(response, false, embed);
                     break;
                 case "maybe":
-                    await UtilService.SendMessage(
-                        String.Format(_config["fort:attendanceresponsemsg"], "maybe"), _config["fort:attendancechannel"]);
+                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.Maybe);
+                    await ReplyAsync(response, false, embed);
                     break;
                 default:
-                    await UtilService.SendMessage("Sorry! I didn't catch your response properly. Your answer will not be recorded. Please try again later.", _config["fort:attendancechannel"]);
+                    await ReplyAsync("Sorry! I didn't catch your response properly. Your answer will be addes as a maybe.");
                     break;
             }
-            //await UtilService.SendMessage(_config["fort:attendancemsg"], _config["fort:attendancechannel"]);
         }
 
     }

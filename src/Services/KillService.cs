@@ -1,5 +1,11 @@
-﻿using Luci.Models;
+﻿using Discord;
+using Discord.WebSocket;
+using Kamael.Packets.Character;
+using Kamael.Packets.Clan;
+using Luci.Models;
 using Luci.Models.Enums;
+using Luci.Services;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,29 +15,32 @@ namespace Luci
 {
     public class KillService
     {
-        public static List<KillsItem> KillLog { get; set; }
-        public static IDictionary KillCountPersonal { get; set; }
-        public static IDictionary KillCountClan { get; set; }
-        public static IDictionary KillCountAlliance { get; set; }
-        public static IDictionary BountyList { get; set; }
+        private IConfiguration _config { get; set; }
+        private DiscordSocketClient _discord { get; set; }
+        private BountyService _bountyService { get; set; }
+        private IDictionary KillCountPersonal { get; set; }
+        private IDictionary KillCountClan { get; set; }
+        private IDictionary KillCountAlliance { get; set; }
+        private List<KillsItem> KillLog;
 
-        public KillService(List<KillsItem> killLog, IDictionary bountyList, IDictionary killCountPersonal, IDictionary killCountClan, IDictionary killCountAlliance)
+        public KillService(IConfiguration Configuration, BountyService BountyService, DiscordSocketClient Discord)
         {
-            KillLog = killLog;
-            KillCountPersonal = killCountPersonal;
-            KillCountClan = killCountClan;
-            KillCountAlliance = killCountAlliance;
-            BountyList = bountyList;
+            _config = Configuration;
+            _bountyService = BountyService;
+            _discord = Discord;
+
+            KillLog = new List<KillsItem>();
+            KillCountPersonal = new Dictionary<string, int>();
+            KillCountClan = new Dictionary<string, int>();
+            KillCountAlliance = new Dictionary<string, int>();
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(IConfiguration Configuration, BountyService BountyService)
         {
+            _config = Configuration;
+            _bountyService = BountyService;
+
             KillLog = new List<KillsItem>();
-            Bounty bounty = new Bounty
-            {
-                Log = new Dictionary<string, int>()
-            };
-            BountyList = new Dictionary<string, Bounty>();
             KillCountPersonal = new Dictionary<string, int>();
             KillCountClan = new Dictionary<string, int>();
             KillCountAlliance = new Dictionary<string, int>();
@@ -43,7 +52,7 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public static async Task<int> GetCountAsync(string Name, KillsType KillType)
+        public async Task<int> GetCountAsync(string Name, KillsType KillType)
         {
             try
             {
@@ -81,103 +90,11 @@ namespace Luci
             }
         }
 
-        public static async Task<List<KillsItem>> GetKillLogAsync()
+        public async Task<List<KillsItem>> GetKillLogAsync()
         {
             try
             {
                 return KillLog;
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
-        }
-
-        public static async Task<Dictionary<string, Bounty>> GetBountyListAsync()
-        {
-            try
-            {
-                return (Dictionary<string, Bounty>)BountyList;
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
-        }
-
-        public static async Task<Bounty> FindBountyByNameAsync(string Name)
-        {
-            try
-            {
-                Bounty bounty = (Bounty)BountyList[Name];
-                if (bounty != null)
-                {
-                    return bounty;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
-        }
-
-        public static async Task<Dictionary<string, Bounty>> AddBountyAsync(string Player, string Description, string Reward, DateTime Expiration, string Type)
-        {
-            try
-            {
-                DateTime tmpExp = DateTime.Today.AddDays(7);
-                if (Expiration != null)
-                {
-                    tmpExp = Expiration;
-                }
-
-                KillsType tmpType;
-                if (Type == "Clan")
-                {
-                    tmpType = KillsType.Clan;
-                }
-                else
-                {
-                    tmpType = KillsType.Personal;
-                }
-
-                Bounty bounty = new Bounty
-                {
-                    BountyID = new Guid(),
-                    PlayerName = Player,
-                    Description = Description,
-                    Reward = Reward,
-                    Log = new Dictionary<string, int>(),
-                    Type = tmpType,
-                    Expiration = tmpExp
-                };
-
-                BountyList.Add(Player, bounty);
-                return (Dictionary<string, Bounty>)BountyList;
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
-        }
-
-        public static async Task<Bounty> AddBountyKillAsync(Bounty bounty, string Player)
-        {
-            try
-            {
-                // currentCount will be zero if the key id doesn't exist..
-                bounty.Log.TryGetValue(Player, out int currentCount);
-
-                bounty.Log[Player] = currentCount + 1;
-                return bounty;
             }
             catch (System.Exception ex)
             {
@@ -192,31 +109,37 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public static async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2)
+        public async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2)
         {
             try
             {
-                ProcessCounts(Name1, Name2, KillCountPersonal);
-                ProcessCounts(Clan1, Clan2, KillCountClan);
+                //Process Kill Counts
+                await ProcessCounts(Name1, Name2, KillCountPersonal);
+                await ProcessCounts(Clan1, Clan2, KillCountClan);
 
-                KillsItem killItem = new KillsItem
-                {
-                    P1 = Name1,
-                    P2 = Name2,
-                    Clan1 = Clan1,
-                    Clan2 = Clan2,
-                    Date = DateTime.Now
-                };
-                killItem.P1KillCount = await GetCountAsync(killItem.P1, KillsType.Personal);
-                killItem.P2KillCount = await GetCountAsync(killItem.P2, KillsType.Personal);
-                killItem.Clan1KillCount = await GetCountAsync(killItem.Clan1, KillsType.Clan);
-                killItem.Clan2KillCount = await GetCountAsync(killItem.Clan2, KillsType.Clan);
-                Bounty bounty = await FindBountyByNameAsync(killItem.P2);
-                if (bounty != null)
-                {
-                    killItem.BountyID = bounty.BountyID;
-                    Bounty result = await AddBountyKillAsync(bounty, killItem.P1);
-                }
+                //Check bounty status
+                bool isBountyKill = false;
+                Bounty bounty = await _bountyService.FindBountyByNameAsync(Name2);
+                
+
+                var p1killcount = await GetCountAsync(Name1, KillsType.Personal);
+                var p2killcount = await GetCountAsync(Name2, KillsType.Personal);
+                var clan1killcount = await GetCountAsync(Clan1, KillsType.Clan);
+                var clan2killcount = await GetCountAsync(Clan2, KillsType.Clan);
+                
+                //Create KillsItem object
+                KillsItem killItem = new KillsItem();
+
+                killItem.P1 = Name1;
+                killItem.P2 = Name2;
+                killItem.Clan1 = Clan1;
+                killItem.Clan2 = Clan2;
+                killItem.Date = DateTime.Now;
+                killItem.P1KillCount = p1killcount;
+                killItem.P2KillCount = p2killcount;
+                killItem.Clan1KillCount = clan1killcount;
+                killItem.Clan2KillCount = clan2killcount;
+                killItem.PlayerBounty = bounty;
 
                 KillLog.Add(killItem);
 
@@ -229,7 +152,7 @@ namespace Luci
             }
         }
 
-        public static async void ProcessCounts(string Name1, string Name2, IDictionary dictionary)
+        public async Task ProcessCounts(string Name1, string Name2, IDictionary dictionary)
         {
             //PROCESS KILLER
             if (dictionary.Contains(Name1))
@@ -250,6 +173,184 @@ namespace Luci
             {
                 dictionary.Add(Name2, -1);
             }
+        }
+
+        public async Task<List<Embed>> KillsForSpecificPvP(string P1, string P2)
+        {
+            string RecentKills = "";
+            string RecentKillsFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
+            int P1Count = 0;
+            int P2Count = 0;
+
+            List<KillsItem> KillLog = await GetKillLogAsync();
+
+            foreach (KillsItem killItem in KillLog)
+            {
+                if (killItem.P1.ToLower() == P1.ToLower() && killItem.P2.ToLower() == P2.ToLower())
+                {
+                    if (killItem.Clan1 == _config["kills:clanname"])
+                    {
+                        P1Count++;
+                        P2Count--;
+                    }
+                    else
+                    {
+                        P2Count++;
+                        P1Count--;
+                    }
+                }
+            }
+            //Create formatted string for return
+            RecentKills += string.Format(RecentKillsFormat, P1, P1Count, P2, P2Count);
+
+            return new List<Embed>();
+        }
+
+        public async Task<List<Embed>> GetEmbedAsync(List<KillsItem> kills)
+        {
+            //Create the object to return
+            List<Embed> embeds = new List<Embed>();
+
+            if ((kills != null) && kills.Count > 0)
+            {
+                //LOOP through kills
+                foreach (KillsItem kill in kills)
+                {
+                    // Setup embeded card
+                    EmbedBuilder builder = new EmbedBuilder();
+
+                    
+                    string formatKill = "";
+                    //string strKill = string.Format(_config["kills:specialformat"],
+                    //                                (P1User == null) ? killItem.P1 : P1User.Mention,
+                    //                                (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+                    //                                killItem.Clan1,
+                    //                                (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+                    //                                (P2User == null) ? killItem.P2 : P2User.Mention,
+                    //                                (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+                    //                                killItem.Clan2,
+                    //                                (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+                    //                                DateTime.Now);
+
+                    //Load kill format
+                    if (kill.PlayerBounty != null)
+                    {
+                        builder.Color = new Color(255, 255, 0);
+                        string title = string.Format(_config["kills:formats:bountytitle"],
+                            kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
+                        builder.Title = title;
+                        builder.Description = string.Format(_config["kills:formats:bountydesc"], kill.Date.ToString());
+                    }
+                    else if (kill.Clan1 == _config["kills:clanname"])
+                    {
+                        builder.Color = new Color(0, 255, 33);
+                        string title = string.Format(_config["kills:formats:victorytitle"],
+                            kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
+                        builder.Title = title;
+                        builder.Description = string.Format(_config["kills:formats:victorydesc"], kill.Date.ToString());
+                    }
+                    else
+                    {
+                        builder.Color = new Color(114, 137, 218);
+                        string title = string.Format(_config["kills:formats:defeattitle"].ToString(),
+                            kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
+                        builder.Title = title;
+                        builder.Description = string.Format(_config["kills:formats:defeatdesc"], kill.Date.ToString());
+                    }
+                    ////Add fields to embed card for the bounty
+                    //builder.AddField(x =>
+                    //{
+                    //    x.Name = $":gift:   {kill.P1}";
+                    //    x.Value = "";
+                    //    x.IsInline = false;
+                    //});
+                }
+
+                return embeds;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task NotifyKill(PacketClanMemberKillNotify kill)
+        {
+            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
+
+            //dictRecentKills.Add(builder);
+            if (killItem != null)
+            {
+
+                List<KillsItem> killList = new List<KillsItem>();
+                killList.Add(killItem);
+
+                List<Embed> embeds = await GetEmbedAsync(killList);
+
+
+                ulong guildId = Convert.ToUInt64(_config["fort:attendance:guildid"]);
+                ulong channelId = Convert.ToUInt64(_config["kills:channelid"]);
+                await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync("", false, embeds[0]);
+            }
+
+            //SPECIAL PLAYER
+            //var tmpName = "";
+            //if (kill.PlayerName == _config["kills:specialname"] && tmpName == _config["kills:specialchannel"])
+            //{
+            //    SocketUser P1User = await UtilService.FindUser(killItem.P1);
+            //    SocketUser P2User = await UtilService.FindUser(killItem.P2);
+
+            //    string docbuilder = string.Format(_config["kills:specialformat"],
+            //            (P1User == null) ? killItem.P1 : P1User.Mention,
+            //            (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+            //            killItem.Clan1,
+            //            (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+            //            (P2User == null) ? killItem.P2 : P2User.Mention,
+            //            (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+            //            killItem.Clan2,
+            //            (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+            //            DateTime.Now);
+            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
+            //}
+        }
+        public async Task NotifyKill(PacketPlayerKillNotify kill)
+        {
+            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
+
+            //dictRecentKills.Add(builder);
+            if (killItem != null)
+            {
+
+                List<KillsItem> killList = new List<KillsItem>();
+                killList.Add(killItem);
+
+                List<Embed> embeds = await GetEmbedAsync(killList);
+
+
+                ulong guildId = Convert.ToUInt64(_config["fort:attendance:guildid"]);
+                ulong channelId = Convert.ToUInt64(_config["kills:channelid"]);
+                await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync("", false, embeds[0]);
+            }
+
+            //SPECIAL PLAYER
+            //var tmpName = "";
+            //if (kill.PlayerName == _config["kills:specialname"] && tmpName == _config["kills:specialchannel"])
+            //{
+            //    SocketUser P1User = await UtilService.FindUser(killItem.P1);
+            //    SocketUser P2User = await UtilService.FindUser(killItem.P2);
+
+            //    string docbuilder = string.Format(_config["kills:specialformat"],
+            //            (P1User == null) ? killItem.P1 : P1User.Mention,
+            //            (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
+            //            killItem.Clan1,
+            //            (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
+            //            (P2User == null) ? killItem.P2 : P2User.Mention,
+            //            (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
+            //            killItem.Clan2,
+            //            (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
+            //            DateTime.Now);
+            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
+            //}
         }
     }
 }

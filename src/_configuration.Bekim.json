@@ -7,28 +7,56 @@
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
   "fort": {
-    "attendancemsg": "Alright, ROLL CALL! Who's coming to fort this week? Please respond with '**!fort answer yes**', '**!fort answer no**', or '**!fort answer maybe**' and your attendance will be marked.",
-    "attendancechannel": "fortress-siege",
-    "attendanceresponsemsg" :  "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n"
+    "enabled" :  true,
+    "attendance": {
+      "msg": "Alright, ROLL CALL! Who's coming to fort this week? Please respond with '**!fort yes**', '**!fort no**', or '**!fort maybe**' and your attendance will be marked.",
+      "channel": "fortress-siege",
+      "response": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
+      "desc": "",
+      "title": ":european_castle:    **FORT ATTENDANCE LIST**   :european_castle: ",
+      "yestitle" : ":thumbsup: YES: \r\n",
+      "notitle" : ":thumbsdown: NO: \r\n",
+      "maybetitle" : ":fingerscrossed: MAYBE: \r\n",
+      "guildId": 399608760991088654,
+      "channelId": 404508579190669312
+    }
+
   },
-  "killlist": {
-    "clanchannel": "pzychos-bot-test",
+  "kills": {
+    "enabled": "true",
+    "clanname": "Legacy",
+    "channel": "pzychos-bot-test",
+    "channelid": 497840559696642072,
+    "formats": {
+      "defeattitle": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
+      "defeatdesc": "_{0}_",
+      "victorytitle": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})}",
+      "victorydesc": "_{0}_",
+      "versustitle": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
+      "versusdesc": "_{0}_",
+      "bountytitle": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
+      "bountydesc": "_{0}_"
+    },
     "clanmessages": {
       "Legacy": "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",
       "Ascension": "Those bitches {0} have {1} kills... but they got good dick.",
       "RogueSquad": "Those pussies {0} have {1} kills... but they go down like a MOTHERFUCKER!"
     },
-    "clanname": "Legacy",
-    "defeatformat": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "enabled": "true",
-    "specialchannel": "docs-slaughterhouse",
-    "specialenabled": "true",
-    "specialformat": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "specialname": "DocHoliday",
-    "versusformat": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "victoryformat": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "bountyformat": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
-    "bountylistformat" : "**Type:**_{3}_ \r\n**Desc:**_{1}_ \r\n**Expiration:**_{4}_\r\n**Reward:** _{2}_\r\n \r\n"  
+    "special": {
+      "channel": "docs-slaughterhouse",
+      "enabled": "true",
+      "format": ":tropy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7}) @ {8}",
+      "name": "DocHoliday"
+    },
+    "bounty": {
+      "enabled": true,
+      "desc": "_These bitches need to die._",
+      "formats": {
+        "list": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n",
+        "embed": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n"
+
+      }
+    }
   },
 
   "clanchat": {

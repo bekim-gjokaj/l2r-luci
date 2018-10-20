@@ -15,7 +15,6 @@ namespace Luci.Models
         public int P2KillCount { get; set; }
         public int Clan1KillCount { get; set; }
         public int Clan2KillCount { get; set; }
-        public bool IsBountyKill { get; set; }
-        public Guid BountyID { get; set; }
+        public Bounty PlayerBounty { get; set; }
     }
 }
