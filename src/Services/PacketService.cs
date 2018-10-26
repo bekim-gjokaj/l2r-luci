@@ -89,7 +89,7 @@ namespace Luci.Services
             try
             {
                 //L2RPacketService proceesses the incoming payload and translates it to a concrete class
-                IL2RPacket l2rPacket = L2RPacketService.AppendIncomingData(payloadData);
+                IL2RPacket l2rPacket = L2RPacketService.GetPacket(payloadData);
                 if (l2rPacket is PacketPlayerKillNotify)
                 {
                     //NOTIFY KILL
