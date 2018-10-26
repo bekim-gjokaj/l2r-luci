@@ -2,8 +2,11 @@
 using Luci.Models;
 using Luci.Models.Enums;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Luci.Services
@@ -17,11 +20,12 @@ namespace Luci.Services
         public BountyService(IConfiguration Config)
         {
             _config = Config;
+            LoadFileAsync().Wait();
         }
         
 
 
-        public async Task<Dictionary<string, Bounty>> GetBountyListAsync()
+        public async Task<Dictionary<string, Bounty>> ListAsync()
         {
             try
             {
@@ -53,7 +57,7 @@ namespace Luci.Services
             }
         }
 
-        public async Task<List<Embed>> AddBountyAsync(string Player, string Description, string Reward, DateTime Expiration, string Type)
+        public async Task<List<Embed>> AddAsync(string Player, string Description, string Reward, DateTime Expiration, string Type)
         {
             try
             {
@@ -87,7 +91,7 @@ namespace Luci.Services
 
                 BountyList.Add(Player, bounty);
 
-
+                var saveresult = await SaveFileAsync();
                 var result = await GetEmbedAsync();
                 return result;
             }
@@ -97,7 +101,7 @@ namespace Luci.Services
                 return null;
             }
         }
-        public async Task<Bounty> AddBountyKillAsync(Bounty bounty, string Player)
+        private async Task<Bounty> IncrementKillAsync(Bounty bounty, string Player)
         {
             try
             {
@@ -156,7 +160,7 @@ namespace Luci.Services
             }
         }
 
-        public async Task<string> BountyEmbedFormatterAsync()
+        public async Task<string> GetStringAsync()
         {
             
             //Initialize string
@@ -179,6 +183,76 @@ namespace Luci.Services
             else
             {
                 return "```BOUNTY LIST EMPTY```";
+            }
+        }
+
+
+        public async Task<bool> SaveFileAsync()
+        {
+
+            string filename = _config["data:bountyfile"];
+            string filedir = _config["data:datadir"];
+            bool success = false;
+
+            try
+            {
+
+                string json = JsonConvert.SerializeObject(BountyList);
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                    File.Create(filename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, BountyList);
+                }
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR SAVING BOUNTY LIST JSON\r\n" + ex.ToString());
+            }
+            return success;
+        }
+
+
+        public async Task LoadFileAsync()
+        {
+
+            string filename = _config["data:bountyfile"];
+            string filedir = _config["data:datadir"];
+            Dictionary<string, Bounty> bountyList = new Dictionary<string, Bounty>();
+            try
+            {
+                
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                    File.Create(filename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    BountyList = serializer.Deserialize<Dictionary<string, Bounty>>(reader);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR LOADING BOUNTY LIST JSON\r\n" + ex.ToString());
             }
         }
 

@@ -1,9 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Luci.Models;
 using Luci.Models.Enums;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Luci.Services
@@ -12,14 +16,15 @@ namespace Luci.Services
     {
         private IConfiguration _config { get; set; }
         //Fort response dictionaries
-        private readonly SortedDictionary<string, string> dictFortRespYes = new SortedDictionary<string, string>();
-        private readonly SortedDictionary<string, string> dictFortRespNo = new SortedDictionary<string, string>();
-        private readonly SortedDictionary<string, string> dictFortRespMaybe = new SortedDictionary<string, string>();
+        private SortedDictionary<string, string> dictFortRespYes = new SortedDictionary<string, string>();
+        private SortedDictionary<string, string> dictFortRespNo = new SortedDictionary<string, string>();
+        private SortedDictionary<string, string> dictFortRespMaybe = new SortedDictionary<string, string>();
         //private readonly SortedDictionary<string, SortedDictionary<string, string>> dictResponses = new SortedDictionary<string, SortedDictionary<string, string>>();
 
         public FortService(IConfiguration config)
         {
             _config = config;
+            LoadFileAsync().Wait();
         }
         
         public async Task<Embed> AttendanceList()
@@ -43,6 +48,8 @@ namespace Luci.Services
                     dictFortRespYes.Add(Player, "maybe");
                     break;
             }
+
+            var result = await SaveFileAsync();
             return await GetEmbedAsync();
         }
 
@@ -154,6 +161,112 @@ namespace Luci.Services
             }
 
             return builder.Build();
+        }
+
+
+        public async Task<bool> SaveFileAsync()
+        {
+
+
+            string yesfilename = _config["data:fortyesfile"];
+            string nofilename = _config["data:fortnofile"];
+            string maybefilename = _config["data:fortmaybefile"];
+            string filedir = _config["data:datadir"];
+            bool success = false;
+
+            try
+            {
+
+                string jsonyes = JsonConvert.SerializeObject(dictFortRespYes);
+                string jsonno = JsonConvert.SerializeObject(dictFortRespNo);
+                string jsonmaybe = JsonConvert.SerializeObject(dictFortRespMaybe);
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                    File.Create(yesfilename).Dispose();
+                if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
+                    File.Create(nofilename).Dispose();
+                if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
+                    File.Create(maybefilename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{yesfilename}"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, dictFortRespYes);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{nofilename}"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, dictFortRespNo);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{maybefilename}"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, dictFortRespMaybe);
+                }
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR SAVING BOUNTY LIST JSON\r\n" + ex.ToString());
+            }
+            return success;
+        }
+
+
+        public async Task LoadFileAsync()
+        {
+            string yesfilename = _config["data:fortyesfile"];
+            string nofilename = _config["data:fortnofile"];
+            string maybefilename = _config["data:fortmaybefile"];
+            string filedir = _config["data:datadir"];
+
+            Dictionary<string, Bounty> bountyList = new Dictionary<string, Bounty>();
+            try
+            {
+
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                    File.Create(yesfilename).Dispose();
+                if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
+                    File.Create(nofilename).Dispose();
+                if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
+                    File.Create(maybefilename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{yesfilename}"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    dictFortRespYes = serializer.Deserialize<SortedDictionary<string, string>>(reader);
+                }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{nofilename}"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    dictFortRespNo = serializer.Deserialize<SortedDictionary<string, string>>(reader);
+                }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{maybefilename}"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    dictFortRespMaybe = serializer.Deserialize<SortedDictionary<string, string>>(reader);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR LOADING BOUNTY LIST JSON\r\n" + ex.ToString());
+            }
+
         }
 
     }

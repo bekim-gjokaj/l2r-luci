@@ -90,10 +90,16 @@ namespace Luci.Services
             {
                 //L2RPacketService proceesses the incoming payload and translates it to a concrete class
                 IL2RPacket l2rPacket = L2RPacketService.AppendIncomingData(payloadData);
-                if (l2rPacket is PacketPlayerKillNotify || l2rPacket is PacketClanMemberKillNotify)
+                if (l2rPacket is PacketPlayerKillNotify)
                 {
                     //NOTIFY KILL
                     _killService.NotifyKill((PacketPlayerKillNotify)l2rPacket).Wait();
+
+                }
+                else if (l2rPacket is PacketClanMemberKillNotify)
+                {
+                    //NOTIFY KILL
+                    _killService.NotifyKill((PacketClanMemberKillNotify)l2rPacket).Wait();
                     
                 }
                 else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")

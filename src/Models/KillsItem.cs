@@ -16,5 +16,7 @@ namespace Luci.Models
         public int Clan1KillCount { get; set; }
         public int Clan2KillCount { get; set; }
         public Bounty PlayerBounty { get; set; }
+        public string Region { get; set; }
+        public int Channel { get; set; }
     }
 }

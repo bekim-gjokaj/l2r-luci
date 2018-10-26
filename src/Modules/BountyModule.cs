@@ -45,22 +45,22 @@ namespace Luci.Modules
 
         [Command("Add")]
         [Summary("Add Bounties")]
-        public async Task Add( string _player, string _desc, string _reward, string _type, int _days )
+        public async Task Add( string Player, string options)
         {
             try
             {
                 //Parse Params[]
-                //string []Params = new string[4];
+                string[] Params = options.Split("|");
                 //string Player = Params[0];
-                //string Description = Params[1];
-                //string Reward = Params[2];
-                //string Type = Params[3];
-                //int Days = Convert.ToInt32(Params[4]);
+                string Description = Params[0];
+                string Reward = Params[1];
+                string Type = Params[2];
+                int Days = Convert.ToInt32(Params[3]);
 
-                DateTime Expiration = DateTime.Now.AddDays(Convert.ToInt32(_days));
+                DateTime Expiration = DateTime.Now.AddDays(Convert.ToInt32(Days));
 
                 //Add new bounty and return new bounty list
-                List<Embed> bountylist = await _bounty.AddBountyAsync(_player, _desc, _reward, Expiration, _type);
+                List<Embed> bountylist = await _bounty.AddAsync(Player, Description, Reward, Expiration, Type);
 
 
                 foreach (var embed in bountylist)

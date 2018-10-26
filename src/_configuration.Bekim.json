@@ -2,6 +2,15 @@
   "packets": {
     "interface": 0
   },
+  "data": {
+    "datadir": "data",
+    "bountyfile": "bountylist.json",
+    "fortyesfile": "fortyes.json",
+    "fortnofile": "fortno.json",
+    "fortmaybefile": "fortmaybe.json",
+    "killfile": "killlist.json"
+
+  },
   "prefix": "!",
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
@@ -29,13 +38,13 @@
     "channelid": 497840559696642072,
     "formats": {
       "defeattitle": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "defeatdesc": "_{0}_",
+      "defeatdesc": "{0} - CH {1} - _{2}_",
       "victorytitle": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})}",
-      "victorydesc": "_{0}_",
+      "victorydesc": "{0} - CH {1} - _{2}_",
       "versustitle": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "versusdesc": "_{0}_",
+      "versusdesc": "{0} - CH {1} - _{2}_",
       "bountytitle": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "bountydesc": "_{0}_"
+      "bountydesc": "{0} - CH {1} - _{2}_"
     },
     "clanmessages": {
       "Legacy": "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",

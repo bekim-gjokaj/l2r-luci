@@ -6,9 +6,12 @@ using Luci.Models;
 using Luci.Models.Enums;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Luci
@@ -33,6 +36,8 @@ namespace Luci
             KillCountPersonal = new Dictionary<string, int>();
             KillCountClan = new Dictionary<string, int>();
             KillCountAlliance = new Dictionary<string, int>();
+
+            LoadFileAsync().Wait();
         }
 
         public async Task StartAsync(IConfiguration Configuration, BountyService BountyService)
@@ -109,7 +114,7 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2)
+        public async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2, string Region, int Channel)
         {
             try
             {
@@ -140,8 +145,12 @@ namespace Luci
                 killItem.Clan1KillCount = clan1killcount;
                 killItem.Clan2KillCount = clan2killcount;
                 killItem.PlayerBounty = bounty;
+                killItem.Region = Region;
+                killItem.Channel = Channel;
 
                 KillLog.Add(killItem);
+
+                var result = await SaveFileAsync();
 
                 return killItem;
             }
@@ -239,7 +248,7 @@ namespace Luci
                         string title = string.Format(_config["kills:formats:bountytitle"],
                             kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
                         builder.Title = title;
-                        builder.Description = string.Format(_config["kills:formats:bountydesc"], kill.Date.ToString());
+                        builder.Description = string.Format(_config["kills:formats:bountydesc"], kill.Region, kill.Channel, kill.Date.ToString());
                     }
                     else if (kill.Clan1 == _config["kills:clanname"])
                     {
@@ -247,15 +256,15 @@ namespace Luci
                         string title = string.Format(_config["kills:formats:victorytitle"],
                             kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
                         builder.Title = title;
-                        builder.Description = string.Format(_config["kills:formats:victorydesc"], kill.Date.ToString());
+                        builder.Description = string.Format(_config["kills:formats:victorydesc"], kill.Region, kill.Channel, kill.Date.ToString());
                     }
                     else
                     {
-                        builder.Color = new Color(114, 137, 218);
+                        builder.Color = new Color(244, 244, 66);
                         string title = string.Format(_config["kills:formats:defeattitle"].ToString(),
                             kill.P1, kill.P1KillCount, kill.Clan1, kill.Clan1KillCount, kill.P2, kill.P2KillCount, kill.Clan2, kill.Clan2KillCount);
                         builder.Title = title;
-                        builder.Description = string.Format(_config["kills:formats:defeatdesc"], kill.Date.ToString());
+                        builder.Description = string.Format(_config["kills:formats:defeatdesc"], kill.Region, kill.Channel, kill.Date.ToString());
                     }
                     ////Add fields to embed card for the bounty
                     //builder.AddField(x =>
@@ -264,6 +273,8 @@ namespace Luci
                     //    x.Value = "";
                     //    x.IsInline = false;
                     //});
+
+                    embeds.Add(builder.Build());
                 }
 
                 return embeds;
@@ -276,7 +287,7 @@ namespace Luci
 
         public async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
-            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
+            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, Convert.ToString(kill.Region), Convert.ToInt32(kill.Channel));
 
             //dictRecentKills.Add(builder);
             if (killItem != null)
@@ -315,7 +326,7 @@ namespace Luci
         }
         public async Task NotifyKill(PacketPlayerKillNotify kill)
         {
-            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name);
+            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, Convert.ToString(kill.Region), Convert.ToInt32(kill.Channel) + 1);
 
             //dictRecentKills.Add(builder);
             if (killItem != null)
@@ -352,5 +363,79 @@ namespace Luci
             //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
             //}
         }
+
+
+
+        public async Task<bool> SaveFileAsync()
+        {
+
+            string filename = _config["data:killfile"];
+            string filedir = _config["data:datadir"];
+            bool success = false;
+
+            try
+            {
+
+                string json = JsonConvert.SerializeObject(KillLog);
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                    File.Create(filename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, KillLog);
+                }
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR SAVING BOUNTY LIST JSON\r\n" + ex.ToString());
+            }
+            return success;
+        }
+
+
+        public async Task LoadFileAsync()
+        {
+
+            string filename = _config["data:killfile"];
+            string filedir = _config["data:datadir"];
+
+            try
+            {
+
+
+                if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                    Directory.CreateDirectory(filedir);
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                    File.Create(filename).Dispose();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    KillLog = serializer.Deserialize<List<KillsItem>>(reader);
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync("****************** ERROR LOADING KILL LIST JSON\r\n" + ex.ToString());
+            }
+
+        }
+
     }
 }
