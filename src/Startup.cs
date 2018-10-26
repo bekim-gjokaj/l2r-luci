@@ -116,8 +116,7 @@ namespace Luci
                         .AddSingleton<SchedulerService>()
                         .AddSingleton<L2RPacketService>()
                         .AddSingleton<PacketService>();
-
-            //await UtilService.StartAsync(discord, _config);
+            
         }
     }
     
