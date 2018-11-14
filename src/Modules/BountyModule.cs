@@ -30,7 +30,28 @@ namespace Luci.Modules
             {
                 List<Embed> result = await _bounty.GetEmbedAsync();
 
-                
+
+                foreach (Embed item in result)
+                {
+                    await ReplyAsync("", false, item);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        [Command("Clear")]
+        [Summary("Clear the list of current bounties")]
+        public async Task Clear()
+        {
+            try
+            {
+                List<Embed> result = await _bounty.ClearAsync();
+
+
                 foreach (Embed item in result)
                 {
                     await ReplyAsync("", false, item);

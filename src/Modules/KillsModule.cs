@@ -1,9 +1,7 @@
 ﻿using Discord.Commands;
 using Luci.Models;
 using Luci.Models.Enums;
-using Luci.Services;
 using Microsoft.Extensions.Configuration;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,7 +11,6 @@ namespace Luci.Modules
     [Summary("Kill List")]
     public class KillsModule : ModuleBase<SocketCommandContext>
     {
-
         private IConfiguration _config { get; set; }
         private KillService _kills { get; set; }
 
@@ -21,7 +18,6 @@ namespace Luci.Modules
         {
             _config = Configuration;
             _kills = Kills;
-
         }
 
         [Command("Recent")]
@@ -34,38 +30,12 @@ namespace Luci.Modules
             if (KillLog.Count != 0)
             {
 
-                foreach (KillsItem killItem in KillLog)
+                var result = await _kills.GetRecentKillsAsync();
+
+                //Return formatted string to Discord
+                foreach (var item in result)
                 {
-                    if (killItem.P1 != _config["kills:specialname"] || killItem.P2 != _config["kills:specialname"])
-                    {
-
-                        //Choose the Kills format for victory or defeat
-                        string RecentKillsFormat = "";
-                        if (killItem.Clan1 == _config["kills:clanname"])
-                        {
-                            RecentKillsFormat += _config["kills:victoryformat"] + "\r\n";
-                        }
-                        else
-                        {
-                            RecentKillsFormat += _config["kills:defeatformat"] + "\r\n";
-                        }
-
-                        //Create formatted string for return
-                        RecentKills += string.Format(RecentKillsFormat,
-                                    killItem.P1,
-                                    (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                                    killItem.Clan1,
-                                    (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                                    killItem.P2,
-                                    (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                                    killItem.Clan2,
-                                    (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                                    DateTime.Now);
-
-                        //Return formatted string to Discord
-                        await ReplyAsync(RecentKills);
-                    }
-
+                    await ReplyAsync("", false, item); 
                 }
             }
             else
@@ -74,21 +44,16 @@ namespace Luci.Modules
             }
         }
 
-
-
         [Command("kills vs")]
         public async Task KillsForSpecificPvP(string P1, string P2)
         {
-
-            var result = await _kills.KillsForSpecificPvP(P1, P2);
+            List<Discord.Embed> result = await _kills.KillsForSpecificPvP(P1, P2);
             //Return formatted string to Discord
-            foreach (var item in result)
+            foreach (Discord.Embed item in result)
             {
-                await ReplyAsync("", false, item); 
+                await ReplyAsync("", false, item);
             }
-
         }
-
 
         /// <summary>
         /// RECENT
@@ -98,21 +63,20 @@ namespace Luci.Modules
         [Summary("My Kills")]
         public async Task KillCountByPlayerAsync(string player)
         {
-            int result = await _kills.GetCountAsync(player, KillsType.Personal);
+            int dailyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 1);
+            int weeklyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 7);
+            int monthlyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 30);
             string response = "";
 
             switch (player)
             {
                 default:
-                    response = string.Format("That asshole {0} has {1} kills.", player, result);
+                    response = string.Format(_config["kills:formats:killsfor"], player, dailyresult, weeklyresult, monthlyresult);
                     break;
             }
 
             await ReplyAsync(response);
         }
-
-
-
 
         /// <summary>
         /// RECENT
@@ -122,19 +86,19 @@ namespace Luci.Modules
         [Summary("My Kills")]
         public async Task KillCountByClanAsync(string clan)
         {
-
-            int result = await _kills.GetCountAsync(clan, KillsType.Clan);
+            int dailyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 1);
+            int weeklyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 7);
+            int monthlyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 30);
             string response = "";
 
             switch (clan)
             {
                 default:
-                    response = string.Format("Those assholes {0} have {1} kills.", clan, result);
+                    response = string.Format(_config["kills:formats:killsforclan"], clan, dailyresult, weeklyresult, monthlyresult);
                     break;
             }
 
             await ReplyAsync(response);
         }
-
     }
 }

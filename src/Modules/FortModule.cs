@@ -46,47 +46,105 @@ namespace Luci.Modules
             //ReplyAsync(_config["fort:attendance:msg"], _config["fort:attendance:channel"]);
         }
 
-        
-        [Command("Fort")]
+
+        [Command("Fort"), Priority(2)]
         [Summary("Get Luci's current status on the fortress siege")]
         public async Task Fort()
         {
             //Get attendance list
             var result = await _fort.GetEmbedAsync();
-            
+
             await ReplyAsync("", false, result);
 
         }
 
-        [Command("Fort")]
+        [Command("Fort"), Priority(1)]
         [Summary("Respond to fort attendance")]
         public async Task Fort(string Response)
         {
             //Initialize variables
-            Embed embed;
+            List<Embed> embeds = new List<Embed>();
             string response = string.Format(_config["fort:attendance:response"], Response);
 
             //Check response
             switch (Response.ToLower())
             {
                 case "yes":
-                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.Yes);
-                    await ReplyAsync(response, false, embed);
+                    embeds = await _fort.AddAttendanceAsync(Context.User.Username, AttendanceResponseType.Yes);
                     break;
-
                 case "no":
-                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.No);
-                    await ReplyAsync(response, false, embed);
+                    embeds = await _fort.AddAttendanceAsync(Context.User.Username, AttendanceResponseType.No);
                     break;
                 case "maybe":
-                    embed = await _fort.AttendanceAdd(Context.User.Username, AttendanceResponseType.Maybe);
-                    await ReplyAsync(response, false, embed);
+                    embeds = await _fort.AddAttendanceAsync(Context.User.Username, AttendanceResponseType.Maybe);
+                    break;
+                case "clear":
+                    embeds = await _fort.ClearAsync();
                     break;
                 default:
-                    await ReplyAsync("Sorry! I didn't catch your response properly. Your answer will be addes as a maybe.");
+                    await ReplyAsync("Sorry! I didn't catch your response properly. Your answer will be added as a maybe.");
+                    embeds = await _fort.AddAttendanceAsync(Context.User.Username, AttendanceResponseType.Maybe);
                     break;
             }
+
+            foreach (var embed in embeds)
+            {
+                await ReplyAsync("", false, embed);
+            }
         }
+
+
+        [Command("Fort"), Priority(0)]
+        [Summary("Respond to fort attendance")]
+        //[RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Fort(string Response, SocketGuildUser user)
+        {
+            //Initialize variables
+            List<Embed> embeds = new List<Embed>();
+            string response = string.Format(_config["fort:attendance:response"], Response);
+
+            //Check response
+            switch (Response.ToLower())
+            {
+                case "yes":
+                    embeds = await _fort.AddAttendanceAsync(user.Username, AttendanceResponseType.Yes);
+                    break;
+                case "no":
+                    embeds = await _fort.AddAttendanceAsync(user.Username, AttendanceResponseType.No);
+                    break;
+                case "maybe":
+                    embeds = await _fort.AddAttendanceAsync(user.Username, AttendanceResponseType.Maybe);
+                    break;
+                case "clear":
+                    embeds = await _fort.ClearAsync();
+                    break;
+                default:
+                    await ReplyAsync("Sorry! I didn't catch your response properly. Your answer will be added as a maybe.");
+                    embeds = await _fort.AddAttendanceAsync(user.Username, AttendanceResponseType.Maybe);
+                    break;
+            }
+
+            foreach (var embed in embeds)
+            {
+                await ReplyAsync("", false, embed);
+            }
+        }
+
+        [Command("FortClear")]
+        [Summary("Clear the fortress siege list")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Clear()
+        {
+            //Get attendance list
+            var result = await _fort.ClearAsync();
+
+            foreach (var embed in result)
+            {
+                await ReplyAsync("", false, embed); 
+            }
+
+        }
+
 
     }
 

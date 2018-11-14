@@ -67,15 +67,10 @@ namespace Luci
             provider.GetRequiredService<BountyService>();
             provider.GetRequiredService<FortService>();
             provider.GetRequiredService<L2RPacketService>();    //The packet logger dll
-            provider.GetRequiredService<PacketService>();       //The packet service for interpretting the packets
-
             await provider.GetRequiredService<SchedulerService>().StartAsync();
-
-            
-
             //.StartAsync(); at the end is what kicks off the console app to start
             await provider.GetRequiredService<StartupService>().StartAsync();
-
+            provider.GetRequiredService<PacketService>();       //The packet service for interpretting the packets
             // Keep the program alive
             await Task.Delay(-1);
         }

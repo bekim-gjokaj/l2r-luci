@@ -2,6 +2,15 @@
   "packets": {
     "interface": 0
   },
+  "data": {
+    "datadir": "data",
+    "bountyfile": "bountylist.json",
+    "fortyesfile": "fortyes.json",
+    "fortnofile": "fortno.json",
+    "fortmaybefile": "fortmaybe.json",
+    "killfile": "killlist.json"
+
+  },
   "prefix": "!",
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
@@ -9,14 +18,16 @@
   "fort": {
     "enabled" :  true,
     "attendance": {
-      "msg": "Alright, ROLL CALL! Who's coming to fort this week? Please respond with '**!fort yes**', '**!fort no**', or '**!fort maybe**' and your attendance will be marked.",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to fort this week? Please respond with '**!fort yes**', '**!fort no**', or '**!fort maybe**' and your attendance will be marked.",
       "channel": "fortress-siege",
       "response": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":european_castle:    **FORT ATTENDANCE LIST**   :european_castle: ",
-      "yestitle" : ":thumbsup: YES: \r\n",
-      "notitle" : ":thumbsdown: NO: \r\n",
-      "maybetitle" : ":fingerscrossed: MAYBE: \r\n",
+      "yestitle" : "\r\n:thumbsup: YES: \r\n",
+      "notitle" : "\r\n:thumbsdown: NO: \r\n",
+      "maybetitle": "\r\n:fingers_crossed: MAYBE: \r\n",
+      "totaltitle" : "Total responses:",
+      "count" : "{0}",
       "guildId": 399608760991088654,
       "channelId": 404508579190669312
     }
@@ -28,14 +39,16 @@
     "channel": "pzychos-bot-test",
     "channelid": 497840559696642072,
     "formats": {
-      "defeattitle": ":boom: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "defeatdesc": "_{0}_",
-      "victorytitle": ":trophy: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})}",
-      "victorydesc": "_{0}_",
-      "versustitle": ":**{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "versusdesc": "_{0}_",
-      "bountytitle": ":star: **{0}**({1}) _*of*_  **{2}**({3}) _*killed*_  **{4}**({5}) _*of*_  **{6}**({7})",
-      "bountydesc": "_{0}_"
+      "defeattitle": ":boom: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "defeatdesc": "{0} - CH {1} - _{2}_",
+      "victorytitle": ":trophy: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "victorydesc": "{0} - CH {1} - _{2}_",
+      "versustitle": " **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "versusdesc": "{0} - CH {1} - _{2}_",
+      "bountytitle": ":star: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "bountydesc": "{0} - CH {1} - _{2}_",
+      "killsfor" :  "That asshole ***{0}*** has ***{1}*** kills in the last 24 hours, ***{2}*** kills in the last 7 days, and ***{3}*** kills in the last 30 days.",
+      "killsforclan" : "Those assholes ***{0}*** have ***{1}*** kills in the last 24 hours, ***{2}*** kills in the last 7 days, and ***{3}*** kills in the last 30 days."
     },
     "clanmessages": {
       "Legacy": "Those crazy fuckers {0} have {1} kills...Oh look! Something shiney!!",
@@ -52,8 +65,8 @@
       "enabled": true,
       "desc": "_These bitches need to die._",
       "formats": {
-        "list": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n",
-        "embed": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n"
+        "list": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n**Leaders :** _{4}_\r\n",
+        "embed": "**Type :** _{0}_ \r\n**Desc : **_{1}_ \r\n**Expiration : **_{2}_ \r\n**Reward :** _{3}_\r\n**Leaders :** _{4}_\r\n"
 
       }
     }

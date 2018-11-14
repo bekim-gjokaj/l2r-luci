@@ -3,10 +3,13 @@ using Kamael.Packets;
 using Kamael.Packets.Character;
 using Kamael.Packets.Chat;
 using Kamael.Packets.Clan;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Configuration;
 using PacketDotNet;
 using SharpPcap;
 using System;
+using System.Collections.Generic;
+using static Kamael.Packets.L2RPacketService;
 
 namespace Luci.Services
 {
@@ -22,6 +25,57 @@ namespace Luci.Services
         private KillService _killService { get; set; }
         private DiscordSocketClient _discord { get; set; }
         private IConfiguration _config { get; set; }
+        /// <summary>
+        /// When true the background thread will terminate
+        /// </summary>
+        /// <param name="args">
+        /// A <see cref="System.String"/>
+        /// </param>
+        private bool BackgroundThreadStop;
+
+        /// <summary>
+        /// Object that is used to prevent two threads from accessing
+        /// PacketQueue at the same time
+        /// </summary>
+        /// <param name="args">
+        /// A <see cref="System.String"/>
+        /// </param>
+        private object QueueLock = new object();
+
+        /// <summary>
+        /// The queue that the callback thread puts packets in. Accessed by
+        /// the background thread when QueueLock is held
+        /// </summary>
+        private List<RawCapture> PacketQueue = new List<RawCapture>();
+
+        /// <summary>
+        /// The last time PcapDevice.Statistics() was called on the active device.
+        /// Allow periodic display of device statistics
+        /// </summary>
+        /// <param name="args">
+        /// A <see cref="System.String"/>
+        /// </param>
+        private DateTime LastStatisticsOutput;
+
+        /// <summary>
+        /// Interval between PcapDevice.Statistics() output
+        /// </summary>
+        /// <param name="args">
+        /// A <see cref="System.String"/>
+        /// </param>
+        private TimeSpan LastStatisticsInterval = new TimeSpan(0, 0, 2);
+
+        private System.Threading.Thread backgroundThread;
+        private PacketArrivalEventHandler arrivalEventHandler;
+        private CaptureStoppedEventHandler captureStoppedEventHandler;
+
+        private Queue<PacketWrapper> packetStrings;
+
+        private int packetCount;
+        private BindingSource bs;
+        private ICaptureStatistics captureStatistics;
+        private bool statisticsUiNeedsUpdate = false;
+
 
         public PacketService(L2RPacketService L2RPacketLogger,         //DI should inject my Singleton instance here
                                 BountyService BountyService,
@@ -37,84 +91,71 @@ namespace Luci.Services
             _killService = KillService;
             _config = config;
 
-            _L2RPacketLogger.StartAsync(InitializeDevice()).Wait();
+            _L2RPacketLogger.L2RPacketArrivalEvent += OnL2RPacketArrival;
+            _L2RPacketLogger.StartCapture();
         }
+
 
         private ICaptureDevice InitializeDevice()
         {
             /* Retrieve the device list  part of initialization*/
             CaptureDeviceList devices = CaptureDeviceList.Instance;
-            int iface = L2RPacketService.Initialization(Kamael.Globals.args);
             ICaptureDevice device = CaptureDeviceList.Instance[Convert.ToInt32(_config["packets:interface"])];
-
-            //Register our handler function to the 'packet arrival' event
-            //This uses a Delegate to pass a reference to PacketCapturer() below
-            device.OnPacketArrival += new PacketArrivalEventHandler(PacketCapturer);
+            
+            // setup background capture
+            arrivalEventHandler = new PacketArrivalEventHandler(device_OnPacketArrival);
+            device.OnPacketArrival += arrivalEventHandler;
+            captureStoppedEventHandler = new CaptureStoppedEventHandler(device_OnCaptureStopped);
+            device.OnCaptureStopped += captureStoppedEventHandler;
 
             return device;
         }
 
-        public void PacketCapturer(object sender, CaptureEventArgs e)
+
+        void device_OnCaptureStopped(object sender, CaptureStoppedEventStatus status)
         {
-            DateTime time = e.Packet.Timeval.Date;
-            int len = e.Packet.Data.Length;
-            IL2RPacket l2rPacket = null;
-
-            Packet packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
-
-            TcpPacket tcpPacket = (PacketDotNet.TcpPacket)packet.Extract(typeof(PacketDotNet.TcpPacket));
-            if (tcpPacket != null)
+            if (status != CaptureStoppedEventStatus.CompletedWithoutError)
             {
-                IPPacket ipPacket = (IPPacket)tcpPacket.ParentPacket;
-                System.Net.IPAddress srcIp = ipPacket.SourceAddress;
-                System.Net.IPAddress dstIp = ipPacket.DestinationAddress;
-                int srcPort = tcpPacket.SourcePort;
-                int dstPort = tcpPacket.DestinationPort;
-                byte[] payloadData = tcpPacket.PayloadData;
-
-                //Console.WriteLine("{0}:{1}:{2}.{3}\tLen={4}\t{5}:{6} -> {7}:{8}",
-                //time.Hour, time.Minute, time.Second, time.Millisecond, len,
-                //srcIp, srcPort, dstIp, dstPort);
-
-                //process incoming packets
-                if (srcPort == 12000)
-                {
-                    l2rPacket = ProcessPackets(payloadData);
-                }
+                //MessageBox.Show("Error stopping capture", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        public void device_OnPacketArrival(object sender, CaptureEventArgs e)
+        {
+            
+        }
 
-        private IL2RPacket ProcessPackets(byte[] payloadData)
+        private async void OnL2RPacketArrival(object sender, L2RPacketArrivalEventArgs e)
         {
             try
             {
                 //L2RPacketService proceesses the incoming payload and translates it to a concrete class
-                IL2RPacket l2rPacket = L2RPacketService.GetPacket(payloadData);
+                IL2RPacket l2rPacket = e.Packet;
                 if (l2rPacket is PacketPlayerKillNotify)
                 {
                     //NOTIFY KILL
-                    _killService.NotifyKill((PacketPlayerKillNotify)l2rPacket).Wait();
+                    //await _killService.NotifyKill((PacketPlayerKillNotify)l2rPacket);
 
                 }
                 else if (l2rPacket is PacketClanMemberKillNotify)
                 {
                     //NOTIFY KILL
-                    _killService.NotifyKill((PacketClanMemberKillNotify)l2rPacket).Wait();
+                    await _killService.NotifyKill((PacketClanMemberKillNotify)l2rPacket);
                     
                 }
                 else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
                 {
                     //NOTIFY CLAN CHAT
-                    UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket).Wait();
+                   await  UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
                 }
 
-                return l2rPacket;
+                
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //Console.WriteLine(ex.ToString());
-                return null;
+                Console.WriteLine("Process packet: " + ex.ToString());
             }
         }
+
+        
     }
 }

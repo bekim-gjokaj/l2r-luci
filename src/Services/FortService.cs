@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using Luci.Models;
 using Luci.Models.Enums;
 using Microsoft.Extensions.Configuration;
@@ -19,42 +18,166 @@ namespace Luci.Services
         private SortedDictionary<string, string> dictFortRespYes = new SortedDictionary<string, string>();
         private SortedDictionary<string, string> dictFortRespNo = new SortedDictionary<string, string>();
         private SortedDictionary<string, string> dictFortRespMaybe = new SortedDictionary<string, string>();
-        //private readonly SortedDictionary<string, SortedDictionary<string, string>> dictResponses = new SortedDictionary<string, SortedDictionary<string, string>>();
+        private readonly SortedDictionary<string, SortedDictionary<string, string>> dictFortResponses = new SortedDictionary<string, SortedDictionary<string, string>>();
 
         public FortService(IConfiguration config)
         {
             _config = config;
             LoadFileAsync().Wait();
         }
-        
-        public async Task<Embed> AttendanceList()
+
+        public async Task<List<Embed>> GetAsync()
         {
-            return await GetEmbedAsync();
+            List<Embed> embeds = new List<Embed>();
+            Embed embed = await GetEmbedAsync();
+            embeds.Add(embed);
+            return embeds;
         }
 
-        public async Task<Embed> AttendanceAdd(string Player, AttendanceResponseType Response)
+
+        public async Task<List<Embed>> AddAttendanceAsync(string Player, AttendanceResponseType Response)
         {
-            switch(Response)
+
+            List<Embed> embeds = new List<Embed>();
+
+            string prevResponse = await CheckIfPlayerResponded(Player);
+
+            //No previous response - add new response
+            if (prevResponse == "")
             {
-                case AttendanceResponseType.Yes:
-                    dictFortRespYes.Add(Player, "yes");
-                    break;
+                switch (Response)
+                {
+                    case AttendanceResponseType.Yes:
+                        dictFortRespYes.Add(Player, "yes");
+                        break;
 
-                case AttendanceResponseType.No:
-                    dictFortRespYes.Add(Player, "no");
-                    break;
+                    case AttendanceResponseType.No:
+                        dictFortRespNo.Add(Player, "no");
+                        break;
 
-                case AttendanceResponseType.Maybe:
-                    dictFortRespYes.Add(Player, "maybe");
-                    break;
+                    case AttendanceResponseType.Maybe:
+                        dictFortRespMaybe.Add(Player, "maybe");
+                        break;
+                }
+            }
+            else if (Response.ToString().ToLower() == prevResponse.ToLower())
+            {
+
+                // Setup embeded alert
+                EmbedBuilder builder = new EmbedBuilder()
+                {
+                    Color = new Color(255, 255, 0),
+                    Title = $"\r\n *** Same response as last time dummy. Are you drunk right now? ***\r\n"
+                };
+                Embed alert = builder.Build();
+
+                embeds.Add(alert);
+            }
+            else //There was a previous response - changing answer
+            {
+                string outputVal;
+                switch (prevResponse)
+                {
+                    case "yes":
+                        dictFortRespYes.Remove(Player);
+                        break;
+
+                    case "no":
+                        dictFortRespNo.Remove(Player);
+                        break;
+
+                    case "maybe":
+                        dictFortRespMaybe.Remove(Player);
+                        break;
+                }
+
+                switch (Response)
+                {
+                    case AttendanceResponseType.Yes:
+                        dictFortRespYes.Add(Player, "yes");
+                        break;
+
+                    case AttendanceResponseType.No:
+                        dictFortRespNo.Add(Player, "no");
+                        break;
+
+                    case AttendanceResponseType.Maybe:
+                        dictFortRespMaybe.Add(Player, "maybe");
+                        break;
+                }
+
+                // Setup embeded alert
+                EmbedBuilder builder = new EmbedBuilder()
+                {
+                    Color = new Color(255, 255, 0),
+                    Title = $"\r\n *** CHANGE OF RESPONSE ***\r\n"
+                };
+                Embed alert = builder.Build();
+
+                embeds.Add(alert);
+
             }
 
-            var result = await SaveFileAsync();
-            return await GetEmbedAsync();
+            bool result = await SaveFileAsync();
+            Embed embed = await GetEmbedAsync();
+
+            embeds.Add(embed);
+
+            return embeds;
         }
 
 
-        public static async Task<int> DaysRemainingTillFortSiege()
+        public async Task<List<Embed>> ClearAsync()
+        {
+            dictFortRespMaybe.Clear();
+            dictFortRespNo.Clear();
+            dictFortRespYes.Clear();
+
+            List<Embed> embeds = new List<Embed>();
+
+            // Setup embeded alert
+            EmbedBuilder builder = new EmbedBuilder()
+            {
+                Color = new Color(255, 0, 0),
+                Title = $"\r\n *** CLEARED LIST ***\r\n"
+            };
+            Embed alert = builder.Build();
+
+            embeds.Add(alert);
+
+
+            Embed embed = await GetEmbedAsync();
+            embeds.Add(embed);
+
+
+            bool result = await SaveFileAsync();
+            return embeds;
+        }
+
+
+        public async Task<string> CheckIfPlayerResponded(string Player)
+        {
+            string response = "";
+
+            if (dictFortRespYes.ContainsKey(Player))
+            {
+                response = dictFortRespYes[Player];
+            }
+            else if (dictFortRespNo.ContainsKey(Player))
+            {
+                response = dictFortRespNo[Player];
+            }
+            else if (dictFortRespMaybe.ContainsKey(Player))
+            {
+                response = dictFortRespMaybe[Player];
+            }
+
+            return response;
+
+        }
+
+
+        private static async Task<int> DaysRemainingTillFortSiege()
         {
             DateTime today = DateTime.Today;
             // The (... + 7) % 7 ensures we end up with a value in the range [0, 6]
@@ -62,7 +185,7 @@ namespace Luci.Services
 
         }
 
-        public static async Task<DateTime> DateOfNextFortSiege()
+        private static async Task<DateTime> DateOfNextFortSiege()
         {
 
             return DateTime.Now.AddDays(await DaysRemainingTillFortSiege());
@@ -72,95 +195,117 @@ namespace Luci.Services
 
         public async Task<Embed> GetEmbedAsync()
         {
-
-            //Setup variables
-            string formatFort = _config["fort:formats:embed"];
-            int daysRemaining = await DaysRemainingTillFortSiege();
-
-            // Setup embeded card
-            EmbedBuilder builder = new EmbedBuilder()
-            {
-                Color = new Color(0, 255, 33),
-                Description = _config["fort:attendance:desc"],
-                Title = $"{_config["fort:attendance:title"]} - ({daysRemaining} days)"
-            };
-
-
-            //LOOP through YES responses in dictionary
-            foreach (var key in dictFortRespYes.Keys)
+            try
             {
 
-                if (dictFortRespYes.Count != 0)
+                //Setup variables
+                string formatFort = _config["fort:formats:embed"];
+                int daysRemaining = await DaysRemainingTillFortSiege();
+                int responseCounter = 0;
+
+                // Setup embeded card
+                EmbedBuilder builder = new EmbedBuilder()
                 {
-                    //Build a string of names
-                    string embedVal = "";
-                    foreach (KeyValuePair<string, string> response in dictFortRespYes)
-                    {
-                        embedVal += $"{response.Key}\r\n";
-                    }
-                    //Add fields to embed card for the bounty
-                    builder.AddField(x =>
-                    {
-                        x.Name = _config["fort:attendance:yestitle"];
-                        x.Value = embedVal;
-                        x.IsInline = false;
-                    });
-                    
-                }
+                    Color = new Color(0, 255, 33),
+                    Description = _config["fort:attendance:desc"],
+                    Title = $"{_config["fort:attendance:title"]} - ({daysRemaining} days)"
+                };
 
-            }
 
-            //LOOP through NO responses in dictionary
-            foreach (var key in dictFortRespNo.Keys)
-            {
-
-                if (dictFortRespNo.Count != 0)
+                //LOOP through YES responses in dictionary
+                foreach (string key in dictFortRespYes.Keys)
                 {
-                    //Build a string of names
-                    string embedVal = "";
-                    foreach (KeyValuePair<string, string> response in dictFortRespNo)
+                    if (dictFortRespYes.Count != 0)
                     {
-                        embedVal += $"{response.Key}\r\n";
-                    }
-                    //Add fields to embed card for the bounty
-                    builder.AddField(x =>
-                    {
-                        x.Name = _config["fort:attendance:notitle"];
-                        x.Value = embedVal;
-                        x.IsInline = false;
-                    });
+                        //Build a string of names
+                        string embedVal = "";
+                        foreach (KeyValuePair<string, string> response in dictFortRespYes)
+                        {
+                            responseCounter++;
+                            embedVal += $"{response.Key}\r\n";
+                        }
+                        //Add fields to embed card for the bounty
+                        builder.AddField(x =>
+                        {
+                            x.Name = _config["fort:attendance:yestitle"];
+                            x.Value = $"\r\n{embedVal}\r\n";
+                            x.IsInline = false;
+                        });
 
+                        break;
+
+                    }
 
                 }
 
-            }
-
-            //LOOP through MAYBE responses in dictionary
-            foreach (var key in dictFortRespMaybe.Keys)
-            {
-
-                if (dictFortRespMaybe.Count != 0)
+                //LOOP through NO responses in dictionary
+                foreach (string key in dictFortRespNo.Keys)
                 {
-                    //Build a string of names
-                    string embedVal = "";
-                    foreach (KeyValuePair<string, string> response in dictFortRespMaybe)
+                    if (dictFortRespNo.Count != 0)
                     {
-                        embedVal += $"{response.Key}\r\n";
-                    }
-                    //Add fields to embed card for the bounty
-                    builder.AddField(x =>
-                    {
-                        x.Name = _config["fort:attendance:yestitle"];
-                        x.Value = embedVal;
-                        x.IsInline = false;
-                    });
+                        //Build a string of names
+                        string embedVal = "";
+                        foreach (KeyValuePair<string, string> response in dictFortRespNo)
+                        {
+                            responseCounter++;
 
-                    
+                            embedVal += $"{response.Key}\r\n";
+                        }
+                        //Add fields to embed card for the bounty
+                        builder.AddField(x =>
+                        {
+                            x.Name = _config["fort:attendance:notitle"];
+                            x.Value = embedVal;
+                            x.IsInline = false;
+                        });
+
+                        break;
+                    }
+
                 }
 
-            }
+                //LOOP through MAYBE responses in dictionary
+                foreach (string key in dictFortRespMaybe.Keys)
+                {
 
-            return builder.Build();
+                    if (dictFortRespMaybe.Count != 0)
+                    {
+                        //Build a string of names
+                        string embedVal = "";
+                        foreach (KeyValuePair<string, string> response in dictFortRespMaybe)
+                        {
+                            responseCounter++;
+                            embedVal += $"{response.Key}\r\n";
+                        }
+                        //Add fields to embed card for the bounty
+                        builder.AddField(x =>
+                        {
+                            x.Name = _config["fort:attendance:maybetitle"];
+                            x.Value = embedVal;
+                            x.IsInline = false;
+                        });
+
+                        break;
+                    }
+
+                }
+
+
+                //Add fields to embed card for the bounty
+                builder.AddField(x =>
+                {
+                    x.Name = string.Format(_config["fort:attendance:totaltitle"]);
+                    x.Value = string.Format(_config["fort:attendance:count"], responseCounter);
+                    x.IsInline = false;
+                });
+                return builder.Build();
+            }
+            catch (Exception ex)
+            {
+
+                await Console.Out.WriteLineAsync(ex.ToString());
+                return null;
+            }
         }
 
 
@@ -182,13 +327,24 @@ namespace Luci.Services
                 string jsonmaybe = JsonConvert.SerializeObject(dictFortRespMaybe);
 
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                {
                     Directory.CreateDirectory(filedir);
+                }
+
                 if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(yesfilename).Dispose();
+                }
+
                 if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(nofilename).Dispose();
+                }
+
                 if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(maybefilename).Dispose();
+                }
 
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
@@ -233,13 +389,24 @@ namespace Luci.Services
 
 
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
+                {
                     Directory.CreateDirectory(filedir);
+                }
+
                 if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(yesfilename).Dispose();
+                }
+
                 if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(nofilename).Dispose();
+                }
+
                 if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
+                {
                     File.Create(maybefilename).Dispose();
+                }
 
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
