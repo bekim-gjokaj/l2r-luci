@@ -25,6 +25,7 @@ namespace Luci
         private IDictionary KillCountPersonal { get; set; }
         private IDictionary KillCountClan { get; set; }
         private IDictionary KillCountAlliance { get; set; }
+        private IDictionary KillTagList { get; set; }
         private List<KillsItem> KillLog;
 
         public KillService(IConfiguration Configuration, BountyService BountyService, DiscordSocketClient Discord)
@@ -37,6 +38,7 @@ namespace Luci
             KillCountPersonal = new Dictionary<string, int>();
             KillCountClan = new Dictionary<string, int>();
             KillCountAlliance = new Dictionary<string, int>();
+            KillTagList = new Dictionary<string, SocketUser>();
 
             LoadFileAsync().Wait();
         }
@@ -47,6 +49,7 @@ namespace Luci
             _bountyService = BountyService;
 
             KillLog = new List<KillsItem>();
+            KillTagList = new Dictionary<string, SocketUser>();
             KillCountPersonal = new Dictionary<string, int>();
             KillCountClan = new Dictionary<string, int>();
             KillCountAlliance = new Dictionary<string, int>();
@@ -169,8 +172,122 @@ namespace Luci
             try
             {
                 var filtered = KillLog
-                 .Where(t => t.Date <= DateTime.Now &&
-                           t.Date >= DateTime.Now.Subtract(TimeSpan.FromDays(1)))
+                 .OrderBy(x => x.Date)
+                 .Take(5)
+                 .ToList();
+
+                embeds = await GetEmbedAsync(filtered);
+
+                return embeds;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return embeds;
+            }
+        }
+
+        /// <summary>
+        /// Gets the count personal.
+        /// </summary>
+        /// <param name="Name">The name.</param>
+        /// <param name="KillType">Type of the kill.</param>
+        /// <returns></returns>
+        public async Task<List<Embed>> GetRecentKillsByPlayerAsync(string Name)
+        {
+
+            List<Embed> embeds = null;
+            try
+            {
+                var filtered = KillLog
+                 .Where(x => x.P1 == Name)
+                 .OrderBy(x => x.Date)
+                 .Take(5)
+                 .ToList();
+
+                embeds = await GetEmbedAsync(filtered);
+
+                return embeds;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return embeds;
+            }
+        }
+
+        /// <summary>
+        /// Gets the count personal.
+        /// </summary>
+        /// <param name="Name">The name.</param>
+        /// <param name="KillType">Type of the kill.</param>
+        /// <returns></returns>
+        public async Task<List<Embed>> GetRecentDeathsByPlayerAsync(string Name)
+        {
+
+            List<Embed> embeds = null;
+            try
+            {
+                var filtered = KillLog
+                 .Where(x => x.P2 == Name)
+                 .OrderBy(x => x.Date)
+                 .Take(5)
+                 .ToList();
+
+                embeds = await GetEmbedAsync(filtered);
+
+                return embeds;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return embeds;
+            }
+        }
+
+        /// <summary>
+        /// Gets the count personal.
+        /// </summary>
+        /// <param name="Name">The name.</param>
+        /// <param name="KillType">Type of the kill.</param>
+        /// <returns></returns>
+        public async Task<List<Embed>> GetRecentKillsByClanAsync(string Name)
+        {
+
+            List<Embed> embeds = null;
+            try
+            {
+                var filtered = KillLog
+                 .Where(x => x.Clan1 == Name)
+                 .OrderBy(x => x.Date)
+                 .Take(5)
+                 .ToList();
+
+                embeds = await GetEmbedAsync(filtered);
+
+                return embeds;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return embeds;
+            }
+        }
+
+        /// <summary>
+        /// Gets the count personal.
+        /// </summary>
+        /// <param name="Name">The name.</param>
+        /// <param name="KillType">Type of the kill.</param>
+        /// <returns></returns>
+        public async Task<List<Embed>> GetRecentDeathsByClanAsync(string Name)
+        {
+
+            List<Embed> embeds = null;
+            try
+            {
+                var filtered = KillLog
+                 .Where(x => x.Clan2 == Name)
                  .OrderBy(x => x.Date)
                  .Take(5)
                  .ToList();
@@ -199,6 +316,22 @@ namespace Luci
             }
         }
 
+        public async Task AddPlayerTagging(SocketUser User, string PlayerName)
+        {
+            try
+            {
+                if (KillTagList is null)
+                    KillTagList = new Dictionary<string, SocketUser>();
+
+                KillTagList.Add(PlayerName, User);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+        
+
         /// <summary>
         /// Gets the count personal.
         /// </summary>
@@ -209,6 +342,9 @@ namespace Luci
         {
             try
             {
+
+                var result = await SaveFileAsync();
+
                 //Process Kill Counts
                 await ProcessCounts(Name1, Name2, KillCountPersonal);
                 await ProcessCounts(Clan1, Clan2, KillCountClan);
@@ -254,13 +390,17 @@ namespace Luci
                 killItem.P2KillCount = p2killcount;
                 killItem.Clan1KillCount = clan1killcount;
                 killItem.Clan2KillCount = clan2killcount;
+                killItem.P1DeathCount = p1deathcount;
+                killItem.P2DeathCount = p2deathcount;
+                killItem.Clan1DeathCount = clan1deathcount;
+                killItem.Clan2DeathCount = clan2deathcount;
                 killItem.PlayerBounty = bounty;
                 killItem.Region = Region;
                 killItem.Channel = Channel;
 
                 KillLog.Add(killItem);
 
-                var result = await SaveFileAsync();
+                result = await SaveFileAsync();
 
                 return killItem;
             }
@@ -294,7 +434,7 @@ namespace Luci
             }
         }
 
-        public async Task<List<Embed>> KillsForSpecificPvP(string P1, string P2)
+        public async Task<List<Embed>> KillCountByVersusAsync(string P1, string P2)
         {
             string RecentKills = "";
             string RecentKillsFormat = "Player {0} has {1} kill(s) Vs. Player {2} has {3} kill(s).\r\n";
@@ -325,6 +465,23 @@ namespace Luci
             return new List<Embed>();
         }
 
+        public async Task<SocketUser> CheckTagPlayer(string PlayerName)
+        {
+            SocketUser user = null;
+
+            if (KillTagList != null)
+            {
+                if (KillTagList.Contains(PlayerName))
+                {
+                    user = (SocketUser)KillTagList[PlayerName];
+                } 
+            }
+
+            var save = await SaveFileAsync();
+            return user;
+            
+        }
+
         public async Task<List<Embed>> GetEmbedAsync(List<KillsItem> kills)
         {
             try
@@ -343,16 +500,7 @@ namespace Luci
 
 
                         string formatKill = "";
-                        //string strKill = string.Format(_config["kills:specialformat"],
-                        //                                (P1User == null) ? killItem.P1 : P1User.Mention,
-                        //                                (killItem.P1KillCount < 0) ? Convert.ToString(killItem.P1KillCount) : "+" + killItem.P1KillCount,
-                        //                                killItem.Clan1,
-                        //                                (killItem.Clan1KillCount < 0) ? Convert.ToString(killItem.Clan1KillCount) : "+" + killItem.Clan1KillCount,
-                        //                                (P2User == null) ? killItem.P2 : P2User.Mention,
-                        //                                (killItem.P2KillCount < 0) ? Convert.ToString(killItem.P2KillCount) : "+" + killItem.P2KillCount,
-                        //                                killItem.Clan2,
-                        //                                (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
-                        //                                DateTime.Now);
+
 
                         //Load kill format
                         if (kill.PlayerBounty != null)
@@ -360,63 +508,91 @@ namespace Luci
                             builder.Color = new Color(244, 244, 66);
                             string title = string.Format(_config["kills:formats:bountytitle"],
                                                                     kill.P1,
-                                                                    await GetKillCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
+                                                                    kill.P1KillCount,
+                                                                    kill.P1DeathCount,
                                                                     kill.Clan1,
-                                                                    await GetKillCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
+                                                                    kill.Clan1KillCount,
+                                                                    kill.Clan1DeathCount,
                                                                     kill.P2,
-                                                                    await GetKillCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
+                                                                    kill.P2KillCount,
+                                                                    kill.P2DeathCount,
                                                                     kill.Clan2,
-                                                                    await GetKillCountByClanAsync(kill.Clan2, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan2, KillsType.Clan, 1)
+                                                                    kill.Clan2KillCount,
+                                                                    kill.Clan2DeathCount
                                                                     );
                             builder.Title = title;
+
                             builder.Description = string.Format(_config["kills:formats:bountydesc"], 
                                                                     kill.Region, 
                                                                     kill.Channel, 
                                                                     kill.Date.ToString());
+
+
+                            var user1 = await CheckTagPlayer(kill.P1);
+                            var user2 = await CheckTagPlayer(kill.P2);
+
+                            if (user1 != null)
+                                builder.Description += $"\r\n( {user1.Mention} )";
+                            if (user2 != null)
+                                builder.Description += $"\r\n( {user2.Mention} )";
                         }
                         else if (kill.Clan1 == _config["kills:clanname"])
                         {
                             builder.Color = new Color(0, 255, 33);
                             string title = string.Format(_config["kills:formats:victorytitle"],
                                                                     kill.P1,
-                                                                    await GetKillCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
+                                                                    kill.P1KillCount,
+                                                                    kill.P1DeathCount,
                                                                     kill.Clan1,
-                                                                    await GetKillCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
+                                                                    kill.Clan1KillCount,
+                                                                    kill.Clan1DeathCount,
                                                                     kill.P2,
-                                                                    await GetKillCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
+                                                                    kill.P2KillCount,
+                                                                    kill.P2DeathCount,
                                                                     kill.Clan2,
-                                                                    await GetKillCountByClanAsync(kill.Clan2, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan2, KillsType.Clan, 1)
+                                                                    kill.Clan2KillCount,
+                                                                    kill.Clan2DeathCount
                                                                     );
                             builder.Title = title;
                             builder.Description = string.Format(_config["kills:formats:victorydesc"], kill.Region, kill.Channel, kill.Date.ToString());
+
+
+                            var user1 = await CheckTagPlayer(kill.P1);
+                            var user2 = await CheckTagPlayer(kill.P2);
+
+                            if (user1 != null)
+                                builder.Description += $"\r\n( {user1.Mention} )";
+                            if (user2 != null)
+                                builder.Description += $"\r\n( {user2.Mention} )";
                         }
                         else
                         {
                             builder.Color = new Color(255, 0, 0);
                             string title = string.Format(_config["kills:formats:defeattitle"].ToString(),
                                                                     kill.P1,
-                                                                    await GetKillCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P1, KillsType.Personal, 1),
+                                                                    kill.P1KillCount,
+                                                                    kill.P1DeathCount,
                                                                     kill.Clan1,
-                                                                    await GetKillCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan1, KillsType.Clan, 1),
+                                                                    kill.Clan1KillCount,
+                                                                    kill.Clan1DeathCount,
                                                                     kill.P2,
-                                                                    await GetKillCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
-                                                                    await GetDeathCountByPlayerAsync(kill.P2, KillsType.Personal, 1),
+                                                                    kill.P2KillCount,
+                                                                    kill.P2DeathCount,
                                                                     kill.Clan2,
-                                                                    await GetKillCountByClanAsync(kill.Clan2, KillsType.Clan, 1),
-                                                                    await GetDeathCountByClanAsync(kill.Clan2, KillsType.Clan, 1)
+                                                                    kill.Clan2KillCount,
+                                                                    kill.Clan2DeathCount
                                                                     );
                             builder.Title = title;
                             builder.Description = string.Format(_config["kills:formats:defeatdesc"], kill.Region, kill.Channel, kill.Date.ToString());
+
+
+                            var user1 = await CheckTagPlayer(kill.P1);
+                            var user2 = await CheckTagPlayer(kill.P2);
+
+                            if (user1 != null)
+                                builder.Description += $"\r\n( {user1.Mention} )";
+                            if (user2 != null)
+                                builder.Description += $"\r\n( {user2.Mention} )";
                         }
                         ////Add fields to embed card for the bounty
                         //builder.AddField(x =>
@@ -535,23 +711,58 @@ namespace Luci
             try
             {
 
-                string json = JsonConvert.SerializeObject(KillLog);
+                string jsonLog = JsonConvert.SerializeObject(KillLog);
+                string jsonTagList = JsonConvert.SerializeObject(KillTagList);
+                string jsonPersonal = JsonConvert.SerializeObject(KillCountPersonal);
+                string jsonClan = JsonConvert.SerializeObject(KillCountClan);
+                string jsonAlliance = JsonConvert.SerializeObject(KillCountAlliance);
 
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
                     Directory.CreateDirectory(filedir);
-                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
-                    File.Create(filename).Dispose();
+
+
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json").Dispose();
 
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
                 serializer.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, KillLog);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, KillLog);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, KillLog);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, KillLog);
+                }
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json"))
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
                     serializer.Serialize(writer, KillLog);
                 }
 
+                await Console.Out.WriteLineAsync("*** SAVED KILL LIST FILE\r\n");
                 success = true;
             }
             catch (Exception ex)
@@ -574,19 +785,55 @@ namespace Luci
 
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
                     Directory.CreateDirectory(filedir);
-                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
-                    File.Create(filename).Dispose();
 
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json").Dispose();
+                if (!File.Exists($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json"))
+                    File.Create($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json").Dispose();
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
                 serializer.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
+
+                KillLog = new List<KillsItem>();
+                KillCountPersonal = new Dictionary<string, int>();
+                KillCountClan = new Dictionary<string, int>();
+                KillCountAlliance = new Dictionary<string, int>();
+                KillTagList = new Dictionary<string, SocketUser>();
+
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_log.json"))
                 using (JsonReader reader = new JsonTextReader(sw))
                 {
                     KillLog = serializer.Deserialize<List<KillsItem>>(reader);
                 }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_taglist.json"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    KillTagList = serializer.Deserialize<Dictionary<string, SocketUser>>(reader);
+                }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_personal.json"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    KillCountPersonal = serializer.Deserialize<Dictionary<string, int>>(reader);
+                }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_clan.json"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    KillCountClan = serializer.Deserialize<Dictionary<string, int>>(reader);
+                }
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}_alliance.json"))
+                using (JsonReader reader = new JsonTextReader(sw))
+                {
+                    KillCountAlliance = serializer.Deserialize<Dictionary<string, int>>(reader);
+                }
 
+                await Console.Out.WriteLineAsync($"*** LOADED KILLFILE from {filedir}\\{filename}");
 
             }
             catch (Exception ex)

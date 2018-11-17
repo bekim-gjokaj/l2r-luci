@@ -1,4 +1,6 @@
 ﻿using Discord;
+using Discord.WebSocket;
+using Kamael.Packets.Clan;
 using Luci.Models;
 using Luci.Models.Enums;
 using Microsoft.Extensions.Configuration;
@@ -12,24 +14,77 @@ using System.Threading.Tasks;
 
 namespace Luci.Services
 {
-    public class BountyService
+    public class PlayerService
     {
         private IConfiguration _config { get; set; }
 
-        //Bounty dictionaries
-        private Dictionary<string, Bounty> BountyList = new Dictionary<string, Bounty>();
+        private DiscordSocketClient _discord { get; set; }
+        //Player dictionaries
+        private Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
 
-        public BountyService(IConfiguration Config)
+        public PlayerService(IConfiguration Config, DiscordSocketClient Discord)
         {
             _config = Config;
+            _discord = Discord;
             LoadFileAsync().Wait();
         }
 
-        public async Task<Dictionary<string, Bounty>> ListAsync()
+        public async Task NotifyClanMembersAsync(PacketClanMemberListReadResult clanmembers)
         {
             try
             {
-                return BountyList;
+
+                ulong guildId = 0;
+                ulong channelId = 0;
+                ulong.TryParse(_config["fort:attendance:guildId"], out guildId);
+                ulong.TryParse(_config["kills:channelId"], out channelId);
+                uint totalCP = 0;
+
+                string msg = $"Clan ***{clanmembers.ClanID}*** - {clanmembers.MemberCount} Members\r\n\r\n";
+                foreach (var item in clanmembers.Members)
+                {
+                    totalCP += item.PlayerCP;
+                    msg += $"***{item.PlayerName}*** - CP: {item.PlayerCP} Offline Time: {item.Offline}\r\n";
+                }
+                msg += $"\r\nTotal Clan CP: {totalCP}";
+                await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(msg);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+
+        public async Task NotifyClanInfoAsync(PacketClanInfoReadResult claninfo)
+        {
+            try
+            {
+
+                ulong guildId = 0;
+                ulong channelId = 0;
+                ulong.TryParse(_config["fort:attendance:guildId"], out guildId);
+                ulong.TryParse(_config["kills:channelId"], out channelId);
+                uint totalCP = 0;
+
+                string msg = $"Clan ***{claninfo.Name}*** - {claninfo.Members} Members\r\n\r\n";
+                
+                    msg += $"***{claninfo.Adena}/{claninfo.Adena2}*** Adena- CP: {claninfo.CombatPower}/{claninfo.CombatPower2}\r\n";
+                
+                msg += $"\r\nTotal Clan CP: {totalCP}";
+                await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(msg);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        public async Task<Dictionary<string, Player>> ListAsync()
+        {
+            try
+            {
+                return PlayerList;
             }
             catch (System.Exception ex)
             {
@@ -38,13 +93,13 @@ namespace Luci.Services
             }
         }
 
-        public async Task<Bounty> FindBountyByNameAsync(string Name)
+        public async Task<Player> FindPlayerByNameAsync(string Name)
         {
             try
             {
-                if (BountyList.ContainsKey(Name))
+                if (PlayerList.ContainsKey(Name))
                 {
-                    return BountyList[Name];
+                    return PlayerList[Name];
                 }
                 else
                 {
@@ -64,7 +119,7 @@ namespace Luci.Services
             {
                 
 
-                BountyList.Clear();
+                PlayerList.Clear();
 
                 bool saveresult = await SaveFileAsync();
                 List<Embed> result = await GetEmbedAsync();
@@ -96,7 +151,7 @@ namespace Luci.Services
                     tmpType = KillsType.Personal;
                 }
 
-                Bounty bounty = new Bounty
+                Player player = new Player
                 {
                     BountyID = System.Guid.NewGuid(),
                     PlayerName = Player,
@@ -107,7 +162,7 @@ namespace Luci.Services
                     Expiration = tmpExp
                 };
 
-                BountyList.Add(Player, bounty);
+                PlayerList.Add(Player, player);
 
                 bool saveresult = await SaveFileAsync();
                 List<Embed> result = await GetEmbedAsync();
@@ -120,16 +175,16 @@ namespace Luci.Services
             }
         }
 
-        public async Task<Bounty> IncrementKillAsync(Bounty bounty, string Player)
+        public async Task<Player> IncrementKillAsync(Player Player, string PlayerName)
         {
             try
             {
                 // currentCount will be zero if the key id doesn't exist..
-                bounty.Log.TryGetValue(Player, out int currentCount);
+                Player.Log.TryGetValue(PlayerName, out int currentCount);
 
-                bounty.Log[Player] = currentCount + 1;
+                Player.Log[PlayerName] = currentCount + 1;
                 await SaveFileAsync();
-                return bounty;
+                return Player;
             }
             catch (System.Exception ex)
             {
@@ -145,52 +200,52 @@ namespace Luci.Services
                 //Create the object to return
                 List<Embed> embeds = new List<Embed>();
 
-                //Load bounty format
-                string formatBounty = _config["kills:bounty:formats:embed"];
+                //Load Player format
+                string formatPlayer = _config["kills:Player:formats:embed"];
 
                 // Setup embeded card
                 EmbedBuilder builder = new EmbedBuilder()
                 {
                     Color = new Color(255, 0, 0),
-                    Description = _config["kills:bounty:desc"],
-                    Title = $":gift:   **BOUNTY LIST**   :gift:"
+                    Description = _config["kills:Player:desc"],
+                    Title = $":gift:   **Player LIST**   :gift:"
                 };
 
-                if ((BountyList != null) && BountyList.Count > 0)
+                if ((PlayerList != null) && PlayerList.Count > 0)
                 {
-                    foreach (KeyValuePair<string, Bounty> item in BountyList)
+                    foreach (KeyValuePair<string, Player> item in PlayerList)
                     {
-                        string bountyleaders = "\r\n";
-                        string bountyplace = "";
+                        string Playerleaders = "\r\n";
+                        string Playerplace = "";
                         int counter = 0;
                         // Reverse for loop (forr + tab)
-                        Dictionary<string, int> bountylog = item.Value.Log;
-                        IEnumerable<KeyValuePair<string, int>> leaders = bountylog.OrderByDescending(x => x.Value).Take(3);
+                        Dictionary<string, int> Playerlog = item.Value.Log;
+                        IEnumerable<KeyValuePair<string, int>> leaders = Playerlog.OrderByDescending(x => x.Value).Take(3);
                         foreach (KeyValuePair<string, int> leader in leaders)
                         {
                             counter++;
                             switch(counter)
                             {
                                 case 1:
-                                    bountyplace = ":first_place:";
+                                    Playerplace = ":first_place:";
                                     break;
                                 case 2:
-                                    bountyplace = ":second_place:";
+                                    Playerplace = ":second_place:";
                                     break;
                                 case 3:
-                                    bountyplace = ":third_place:";
+                                    Playerplace = ":third_place:";
                                     break;
                             }
-                            bountyleaders += string.Format("{0} {1}:   {2}\r\n",bountyplace, leader.Key, leader.Value);
+                            Playerleaders += string.Format("{0} {1}:   {2}\r\n",Playerplace, leader.Key, leader.Value);
                         }
 
 
-                        bountyleaders += "";
-                        //Add fields to embed card for the bounty
+                        Playerleaders += "";
+                        //Add fields to embed card for the Player
                         builder.AddField(x =>
                         {
                             x.Name = $":gift:   {item.Value.PlayerName}";
-                            x.Value = string.Format(formatBounty, item.Value.Type, item.Value.Description, item.Value.Expiration, item.Value.Reward, bountyleaders);
+                            x.Value = string.Format(formatPlayer, item.Value.Type, item.Value.Description, item.Value.Expiration, item.Value.Reward, Playerleaders);
                             x.IsInline = false;
                         });
                     }
@@ -214,41 +269,41 @@ namespace Luci.Services
             //Initialize string
             string strBounties = "";
 
-            if ((BountyList != null) && BountyList.Count > 0)
+            if ((PlayerList != null) && PlayerList.Count > 0)
             {
-                foreach (KeyValuePair<string, Bounty> item in BountyList)
+                foreach (KeyValuePair<string, Player> item in PlayerList)
                 {
                     //Choose the Kills format for victory or defeat
-                    string BountyListFormat = _config["kills:bounty:formats:list"];
+                    string PlayerListFormat = _config["kills:Player:formats:list"];
 
                     //Create formatted string for return
-                    strBounties += string.Format(BountyListFormat, item.Value.PlayerName, item.Value.Description, item.Value.Reward, item.Value.Type.ToString(), item.Value.Expiration);
+                    strBounties += string.Format(PlayerListFormat, item.Value.PlayerName, item.Value.Description, item.Value.Reward, item.Value.Type.ToString(), item.Value.Expiration);
                 }
-                strBounties = $"```BOUNTY LIST\r\n\r\n{strBounties}\r\n\r\n```";
+                strBounties = $"```Player LIST\r\n\r\n{strBounties}\r\n\r\n```";
                 return strBounties;
             }
             else
             {
-                return "```BOUNTY LIST EMPTY```";
+                return "```Player LIST EMPTY```";
             }
         }
 
         public async Task<bool> SaveFileAsync()
         {
-            string filename = _config["data:bountyfile"];
+            string filename = _config["data:Playerfile"];
             string filedir = _config["data:datadir"];
             bool success = false;
 
             try
             {
-                string json = JsonConvert.SerializeObject(BountyList);
+                string json = JsonConvert.SerializeObject(PlayerList);
 
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
                 {
                     Directory.CreateDirectory(filedir);
                 }
 
-                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                if (!File.Exists(filename))               // Create Playerlist file if it doesn't exist
                 {
                     File.Create(filename).Dispose();
                 }
@@ -260,23 +315,23 @@ namespace Luci.Services
                 using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    serializer.Serialize(writer, BountyList);
+                    serializer.Serialize(writer, PlayerList);
                 }
 
                 success = true;
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync("****************** ERROR SAVING BOUNTY LIST JSON\r\n" + ex.ToString());
+                await Console.Out.WriteLineAsync("****************** ERROR SAVING Player LIST JSON\r\n" + ex.ToString());
             }
             return success;
         }
 
         public async Task LoadFileAsync()
         {
-            string filename = _config["data:bountyfile"];
+            string filename = _config["data:Playerfile"];
             string filedir = _config["data:datadir"];
-            Dictionary<string, Bounty> bountyList = new Dictionary<string, Bounty>();
+            Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
             try
             {
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
@@ -284,7 +339,7 @@ namespace Luci.Services
                     Directory.CreateDirectory(filedir);
                 }
 
-                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
+                if (!File.Exists(filename))               // Create Playerlist file if it doesn't exist
                 {
                     File.Create(filename).Dispose();
                 }
@@ -296,13 +351,13 @@ namespace Luci.Services
                 using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
                 using (JsonReader reader = new JsonTextReader(sw))
                 {
-                    BountyList = serializer.Deserialize<Dictionary<string, Bounty>>(reader);
+                    PlayerList = serializer.Deserialize<Dictionary<string, Player>>(reader);
                 }
-                await Console.Out.WriteLineAsync($"*** LOADED BOUNTYFILE from {filedir}\\{filename}");
+                await Console.Out.WriteLineAsync($"*** LOADED PlayerFILE from {filedir}\\{filename}");
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync("****************** ERROR LOADING BOUNTY LIST JSON\r\n" + ex.ToString());
+                await Console.Out.WriteLineAsync("****************** ERROR LOADING Player LIST JSON\r\n" + ex.ToString());
             }
         }
     }

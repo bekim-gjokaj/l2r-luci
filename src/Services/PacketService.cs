@@ -23,6 +23,7 @@ namespace Luci.Services
         private BountyService _bountyService { get; set; }
         private FortService _fortService { get; set; }
         private KillService _killService { get; set; }
+        private PlayerService _playerService { get; set; }
         private DiscordSocketClient _discord { get; set; }
         private IConfiguration _config { get; set; }
         /// <summary>
@@ -80,6 +81,7 @@ namespace Luci.Services
         public PacketService(L2RPacketService L2RPacketLogger,         //DI should inject my Singleton instance here
                                 BountyService BountyService,
                                 FortService FortService,
+                                PlayerService PlayerService,
                                 KillService KillService,
                                 DiscordSocketClient Discord,
                                 IConfiguration config)
@@ -88,6 +90,7 @@ namespace Luci.Services
             _discord = Discord;
             _bountyService = BountyService;
             _fortService = FortService;
+            _playerService = PlayerService;
             _killService = KillService;
             _config = config;
 
@@ -140,15 +143,25 @@ namespace Luci.Services
                 {
                     //NOTIFY KILL
                     await _killService.NotifyKill((PacketClanMemberKillNotify)l2rPacket);
-                    
+
                 }
                 else if (l2rPacket is PacketChatGuildListReadResult && _config["clanchat:enabled"] == "true")
                 {
                     //NOTIFY CLAN CHAT
-                   await  UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
+                    await UtilService.NotifyClanChat((PacketChatGuildListReadResult)l2rPacket);
+                }
+                else if (l2rPacket is PacketClanMemberListReadResult)
+                {
+                    //NOTIFY CLAN INFO
+                    await _playerService.NotifyClanMembersAsync((PacketClanMemberListReadResult)l2rPacket);
+                }
+                else if (l2rPacket is PacketClanInfoReadResult)
+                {
+                    //NOTIFY CLAN INFO
+                    await _playerService.NotifyClanInfoAsync((PacketClanInfoReadResult)l2rPacket);
                 }
 
-                
+
             }
             catch (Exception ex)
             {

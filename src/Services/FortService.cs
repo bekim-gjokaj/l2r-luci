@@ -428,6 +428,7 @@ namespace Luci.Services
                     dictFortRespMaybe = serializer.Deserialize<SortedDictionary<string, string>>(reader);
                 }
 
+                await Console.Out.WriteLineAsync($"*** LOADED FORTFILE from {filedir}\\{yesfilename}");
             }
             catch (Exception ex)
             {

@@ -31,16 +31,10 @@ namespace Luci.Modules
         [Summary("Prompt Luci to ask who's coming")]
         public async Task Attendance()
         {
-            var guildId = Context.Guild.Id;
-            var channels = Context.Guild.Channels;
-            ulong channelId = new ulong();
-            foreach(var item in channels)
-            {
-                if(item.Name == _config["fort:attendance:channel"])
-                {
-                    channelId = item.Id;
-                }
-            }
+            ulong guildId = 0;
+            ulong channelId = 0; 
+            ulong.TryParse(_config["fort:attendance:guildId"], out guildId);
+            ulong.TryParse(_config["fort:attendance:channelId"], out channelId);
             await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
             //Luci will send message asking for roll call
             //ReplyAsync(_config["fort:attendance:msg"], _config["fort:attendance:channel"]);

@@ -39,13 +39,13 @@
     "channel": "pzychos-bot-test",
     "channelid": 497840559696642072,
     "formats": {
-      "defeattitle": ":boom: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "defeattitle": ":boom: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K:{7}/D:{8}) _*of*_  **{9}** (K:{10}/D:{11})",
       "defeatdesc": "{0} - CH {1} - _{2}_",
-      "victorytitle": ":trophy: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "victorytitle": ":trophy: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K:{7}/D:{8}) _*of*_  **{9}** (K:{10}/D:{11})",
       "victorydesc": "{0} - CH {1} - _{2}_",
-      "versustitle": " **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "versustitle": " **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K:{7}/D:{8}) _*of*_  **{9}** (K:{10}/D:{11})",
       "versusdesc": "{0} - CH {1} - _{2}_",
-      "bountytitle": ":star: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K/D:{7}/{8}) _*of*_  **{9}** (K/D:{10}/{11})",
+      "bountytitle": ":star: **{0}** (K:{1}/D:{2}) _*of*_  **{3}** (K:{4}/D:{5}) _*killed*_  **{6}** (K:{7}/D:{8}) _*of*_  **{9}** (K:{10}/D:{11})",
       "bountydesc": "{0} - CH {1} - _{2}_",
       "killsfor" :  "That asshole ***{0}*** has ***{1}*** kills in the last 24 hours, ***{2}*** kills in the last 7 days, and ***{3}*** kills in the last 30 days.",
       "killsforclan" : "Those assholes ***{0}*** have ***{1}*** kills in the last 24 hours, ***{2}*** kills in the last 7 days, and ***{3}*** kills in the last 30 days."

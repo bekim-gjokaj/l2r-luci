@@ -24,7 +24,7 @@ namespace Luci.Services
 
             Dictionary<string, object> JobList = new Dictionary<string, object>
             {
-                { "0 30 0 * * ?", new JobAlertServerReset() },
+                { "23 30 0 * * ?", new JobAlertServerReset() },
                 { "0 30 18 ? * 7", new JobAlertCastleSeige() },
                 { "0 30 16 ? * 5", new JobAlertFortSiege() }
             };
@@ -48,6 +48,7 @@ namespace Luci.Services
 
                 // Schedule the job using the job and trigger
                 await sched.ScheduleJob(jobAlert, triggerAlert);
+                Console.WriteLine("*** Started Job - Job" + counter);
                 counter++;
             }
         }

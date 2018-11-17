@@ -11,6 +11,7 @@ namespace Luci.Modules
     [Summary("Kill List")]
     public class KillsModule : ModuleBase<SocketCommandContext>
     {
+
         private IConfiguration _config { get; set; }
         private KillService _kills { get; set; }
 
@@ -24,18 +25,16 @@ namespace Luci.Modules
         [Summary("Recent Kills")]
         public async Task Recent()
         {
-            string RecentKills = "```RECENT LIST```";
-
             List<KillsItem> KillLog = await _kills.GetKillLogAsync();
             if (KillLog.Count != 0)
             {
 
-                var result = await _kills.GetRecentKillsAsync();
+                List<Discord.Embed> result = await _kills.GetRecentKillsAsync();
 
                 //Return formatted string to Discord
-                foreach (var item in result)
+                foreach (Discord.Embed item in result)
                 {
-                    await ReplyAsync("", false, item); 
+                    await ReplyAsync("", false, item);
                 }
             }
             else
@@ -45,14 +44,22 @@ namespace Luci.Modules
         }
 
         [Command("kills vs")]
-        public async Task KillsForSpecificPvP(string P1, string P2)
+        public async Task KillCountByVersusAsync(string P1, string P2)
         {
-            List<Discord.Embed> result = await _kills.KillsForSpecificPvP(P1, P2);
+            List<Discord.Embed> result = await _kills.KillCountByVersusAsync(P1, P2);
             //Return formatted string to Discord
             foreach (Discord.Embed item in result)
             {
                 await ReplyAsync("", false, item);
             }
+        }
+
+        [Command("kills tag me")]
+        public async Task KillsTagMeAsync(string PlayerName)
+        {
+            await _kills.AddPlayerTagging(Context.User, PlayerName);
+            await ReplyAsync("Ok, I'll tag you from now on.");
+
         }
 
         /// <summary>
@@ -63,19 +70,45 @@ namespace Luci.Modules
         [Summary("My Kills")]
         public async Task KillCountByPlayerAsync(string player)
         {
-            int dailyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 1);
-            int weeklyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 7);
-            int monthlyresult = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 30);
+            int killdaily = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 1);
+            int killweekly = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 7);
+            int killmonthly = await _kills.GetKillCountByPlayerAsync(player, KillsType.Personal, 30);
+            int deathdaily = await _kills.GetDeathCountByPlayerAsync(player, KillsType.Personal, 1);
+            int deathweekly = await _kills.GetDeathCountByPlayerAsync(player, KillsType.Personal, 7);
+            int deathmonthly = await _kills.GetDeathCountByPlayerAsync(player, KillsType.Personal, 30);
             string response = "";
 
             switch (player)
             {
                 default:
-                    response = string.Format(_config["kills:formats:killsfor"], player, dailyresult, weeklyresult, monthlyresult);
+                    response = string.Format(_config["kills:formats:killsfor"],
+                                                player,
+                                                killdaily,
+                                                deathdaily,
+                                                killweekly,
+                                                deathweekly,
+                                                killmonthly,
+                                                deathmonthly);
                     break;
             }
 
             await ReplyAsync(response);
+
+
+            await ReplyAsync("```\r\nRECENT KILLS\r\n```");
+            List<Discord.Embed> recentkills = await _kills.GetRecentKillsByPlayerAsync(player);
+            foreach (Discord.Embed kill in recentkills)
+            {
+                await ReplyAsync("", false, kill);
+            }
+
+
+            await ReplyAsync("```\r\nRECENT DEATHS\r\n```");
+            List<Discord.Embed> recentdeaths = await _kills.GetRecentDeathsByPlayerAsync(player);
+            foreach (Discord.Embed kill in recentdeaths)
+            {
+                await ReplyAsync("", false, kill);
+            }
         }
 
         /// <summary>
@@ -86,19 +119,45 @@ namespace Luci.Modules
         [Summary("My Kills")]
         public async Task KillCountByClanAsync(string clan)
         {
-            int dailyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 1);
-            int weeklyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 7);
-            int monthlyresult = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 30);
+            int killdaily = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 1);
+            int killweekly = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 7);
+            int killmonthly = await _kills.GetKillCountByClanAsync(clan, KillsType.Clan, 30);
+            int deathdaily = await _kills.GetDeathCountByClanAsync(clan, KillsType.Clan, 1);
+            int deathweekly = await _kills.GetDeathCountByClanAsync(clan, KillsType.Clan, 7);
+            int deathmonthly = await _kills.GetDeathCountByClanAsync(clan, KillsType.Clan, 30);
             string response = "";
 
             switch (clan)
             {
                 default:
-                    response = string.Format(_config["kills:formats:killsforclan"], clan, dailyresult, weeklyresult, monthlyresult);
+                    response = string.Format(_config["kills:formats:killsforclan"],
+                                                clan,
+                                                killdaily,
+                                                deathdaily,
+                                                killweekly,
+                                                deathweekly,
+                                                killmonthly,
+                                                deathmonthly);
                     break;
             }
 
             await ReplyAsync(response);
+
+
+            await ReplyAsync("```\r\nRECENT KILLS\r\n```");
+            List<Discord.Embed> recentkills = await _kills.GetRecentKillsByClanAsync(clan);
+            foreach (Discord.Embed kill in recentkills)
+            {
+                await ReplyAsync("", false, kill);
+            }
+
+
+            await ReplyAsync("```\r\nRECENT DEATHS\r\n```");
+            List<Discord.Embed> recentdeaths = await _kills.GetRecentDeathsByClanAsync(clan);
+            foreach (Discord.Embed kill in recentdeaths)
+            {
+                await ReplyAsync("", false, kill);
+            }
         }
     }
 }
