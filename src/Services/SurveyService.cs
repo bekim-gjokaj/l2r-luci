@@ -273,8 +273,11 @@ namespace Luci.Services
                         string embedVal = "";
                         foreach (KeyValuePair<string, string> response in survey.Responses)
                         {
-                            responseCounter++;
-                            embedVal += $"{response.Key}\r\n";
+                            if (response.Value == "yes")
+                            {
+                                responseCounter++;
+                                embedVal += $"{response.Key}\r\n";
+                            }
                         }
                         //Add fields to embed card for the bounty
                         builder.AddField(x =>
@@ -300,8 +303,11 @@ namespace Luci.Services
                         string embedVal = "";
                         foreach (KeyValuePair<string, string> response in survey.Responses)
                         {
-                            responseCounter++;
-                            embedVal += $"{response.Key}\r\n";
+                            if (response.Value == "no")
+                            {
+                                responseCounter++;
+                                embedVal += $"{response.Key}\r\n"; 
+                            }
                         }
                         //Add fields to embed card for the bounty
                         builder.AddField(x =>
@@ -321,14 +327,17 @@ namespace Luci.Services
                 //LOOP through YES responses in dictionary
                 foreach (string key in survey.Responses.Keys)
                 {
-                    if (survey.Responses.Count != 0 && survey.Responses[key] == "Maybe")
+                    if (survey.Responses.Count != 0 && survey.Responses[key] == "maybe")
                     {
                         //Build a string of names
                         string embedVal = "";
                         foreach (KeyValuePair<string, string> response in survey.Responses)
                         {
-                            responseCounter++;
-                            embedVal += $"{response.Key}\r\n";
+                            if (response.Value == "maybe")
+                            {
+                                responseCounter++;
+                                embedVal += $"{response.Key}\r\n";
+                            }
                         }
                         //Add fields to embed card for the bounty
                         builder.AddField(x =>
