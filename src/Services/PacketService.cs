@@ -21,7 +21,7 @@ namespace Luci.Services
         private L2RPacketService _L2RPacketLogger { get; set; }
 
         private BountyService _bountyService { get; set; }
-        private FortService _fortService { get; set; }
+        private SurveyService _fortService { get; set; }
         private KillService _killService { get; set; }
         private PlayerService _playerService { get; set; }
         private DiscordSocketClient _discord { get; set; }
@@ -80,7 +80,7 @@ namespace Luci.Services
 
         public PacketService(L2RPacketService L2RPacketLogger,         //DI should inject my Singleton instance here
                                 BountyService BountyService,
-                                FortService FortService,
+                                SurveyService FortService,
                                 PlayerService PlayerService,
                                 KillService KillService,
                                 DiscordSocketClient Discord,

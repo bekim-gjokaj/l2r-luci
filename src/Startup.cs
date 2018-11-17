@@ -66,7 +66,7 @@ namespace Luci
             provider.GetRequiredService<KillService>();
             provider.GetRequiredService<BountyService>();
             provider.GetRequiredService<PlayerService>();
-            provider.GetRequiredService<FortService>();
+            provider.GetRequiredService<SurveyService>();
             provider.GetRequiredService<L2RPacketService>();    //The packet logger dll
             await provider.GetRequiredService<SchedulerService>().StartAsync();
             //.StartAsync(); at the end is what kicks off the console app to start
@@ -108,7 +108,7 @@ namespace Luci
                         .AddSingleton<Random>()
                         .AddSingleton<BountyService>()
                         .AddSingleton<PlayerService>()
-                        .AddSingleton<FortService>()
+                        .AddSingleton<SurveyService>()
                         .AddSingleton<KillService>()
                         .AddSingleton<SchedulerService>()
                         .AddSingleton<L2RPacketService>()

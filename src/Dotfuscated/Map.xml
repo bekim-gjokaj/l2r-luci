@@ -3018,19 +3018,19 @@
                 <eventlist />
             </type>
             <type>
-                <name>Luci.Models.Enums.AttendanceResponseType</name>
+                <name>Luci.Models.Enums.SurveyResponseType</name>
                 <methodlist />
                 <fieldlist>
                     <field>
-                        <signature>Luci.Models.Enums.AttendanceResponseType</signature>
+                        <signature>Luci.Models.Enums.SurveyResponseType</signature>
                         <name>Maybe</name>
                     </field>
                     <field>
-                        <signature>Luci.Models.Enums.AttendanceResponseType</signature>
+                        <signature>Luci.Models.Enums.SurveyResponseType</signature>
                         <name>No</name>
                     </field>
                     <field>
-                        <signature>Luci.Models.Enums.AttendanceResponseType</signature>
+                        <signature>Luci.Models.Enums.SurveyResponseType</signature>
                         <name>Yes</name>
                     </field>
                     <field>
@@ -3820,7 +3820,7 @@
                     </method>
                     <method>
                         <signature>Luci.Services.FortService()</signature>
-                        <name>get__fort</name>
+                        <name>get__survey</name>
                         <newname>b</newname>
                     </method>
                     <method>
@@ -3835,7 +3835,7 @@
                     </method>
                     <method>
                         <signature>void(Luci.Services.FortService)</signature>
-                        <name>set__fort</name>
+                        <name>set__survey</name>
                         <newname>a</newname>
                     </method>
                 </methodlist>
@@ -3852,7 +3852,7 @@
                     </field>
                     <field>
                         <signature>Luci.Services.FortService</signature>
-                        <name>&lt;_fort&gt;k__BackingField</name>
+                        <name>&lt;_survey&gt;k__BackingField</name>
                         <newname>b</newname>
                     </field>
                 </fieldlist>
@@ -3867,7 +3867,7 @@
                     </property>
                     <property>
                         <signature>Luci.Services.FortService()</signature>
-                        <name>_fort</name>
+                        <name>_survey</name>
                     </property>
                 </propertylist>
                 <eventlist />
@@ -7067,8 +7067,8 @@
                         <name>.ctor</name>
                     </method>
                     <method>
-                        <signature>System.Threading.Tasks.Task`1&lt;System.Collections.Generic.List`1&lt;Discord.Embed&gt;&gt;(string, Luci.Models.Enums.AttendanceResponseType)</signature>
-                        <name>AddAttendanceAsync</name>
+                        <signature>System.Threading.Tasks.Task`1&lt;System.Collections.Generic.List`1&lt;Discord.Embed&gt;&gt;(string, Luci.Models.Enums.SurveyResponseType)</signature>
+                        <name>AddResponseAsync</name>
                     </method>
                     <method>
                         <signature>System.Threading.Tasks.Task`1&lt;string&gt;(string)</signature>
@@ -7267,7 +7267,7 @@
                 <eventlist />
             </type>
             <type>
-                <name>Luci.Services.FortService/&lt;AddAttendanceAsync&gt;d__10</name>
+                <name>Luci.Services.FortService/&lt;AddResponseAsync&gt;d__10</name>
                 <newname>Luci.Services.FortService/b</newname>
                 <methodlist>
                     <method>
@@ -7382,7 +7382,7 @@
                         <newname>c</newname>
                     </field>
                     <field>
-                        <signature>Luci.Models.Enums.AttendanceResponseType</signature>
+                        <signature>Luci.Models.Enums.SurveyResponseType</signature>
                         <name>Response</name>
                         <newname>d</newname>
                     </field>
@@ -8135,7 +8135,7 @@
                     </method>
                     <method>
                         <signature>Luci.Services.FortService()</signature>
-                        <name>get__fortService</name>
+                        <name>get__surveyService</name>
                         <newname>f</newname>
                     </method>
                     <method>
@@ -8170,7 +8170,7 @@
                     </method>
                     <method>
                         <signature>void(Luci.Services.FortService)</signature>
-                        <name>set__fortService</name>
+                        <name>set__surveyService</name>
                         <newname>a</newname>
                     </method>
                     <method>
@@ -8207,7 +8207,7 @@
                     </field>
                     <field>
                         <signature>Luci.Services.FortService</signature>
-                        <name>&lt;_fortService&gt;k__BackingField</name>
+                        <name>&lt;_surveyService&gt;k__BackingField</name>
                         <newname>c</newname>
                     </field>
                     <field>
@@ -8305,7 +8305,7 @@
                     </property>
                     <property>
                         <signature>Luci.Services.FortService()</signature>
-                        <name>_fortService</name>
+                        <name>_surveyService</name>
                     </property>
                     <property>
                         <signature>Luci.KillService()</signature>

@@ -5,7 +5,7 @@ using System.Text;
 namespace Luci.Models.Enums
 {
 
-    public enum AttendanceResponseType
+    public enum SurveyResponseType
     {
         Yes = 0,
         No = 1,

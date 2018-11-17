@@ -11,52 +11,94 @@ using System.Threading.Tasks;
 
 namespace Luci.Services
 {
-    public class FortService
+    public class SurveyService
     {
         private IConfiguration _config { get; set; }
         //Fort response dictionaries
-        private SortedDictionary<string, string> dictFortRespYes = new SortedDictionary<string, string>();
-        private SortedDictionary<string, string> dictFortRespNo = new SortedDictionary<string, string>();
-        private SortedDictionary<string, string> dictFortRespMaybe = new SortedDictionary<string, string>();
-        private readonly SortedDictionary<string, SortedDictionary<string, string>> dictFortResponses = new SortedDictionary<string, SortedDictionary<string, string>>();
+        private List<Survey> _surveys = new List<Survey>();
+        private SortedDictionary<string, string> dictResponses = new SortedDictionary<string, string>();
 
-        public FortService(IConfiguration config)
+        public SurveyService(IConfiguration config)
         {
             _config = config;
-            LoadFileAsync().Wait();
+            LoadAsync().Wait();
         }
 
-        public async Task<List<Embed>> GetAsync()
+        public async Task LoadAsync()
+        {
+            await LoadFileAsync();
+
+            IConfigurationSection configSurveys = _config.GetSection("surveys");
+            
+
+            foreach (var configSurvey in configSurveys.GetChildren())
+            {
+                Survey survey = new Survey();
+                survey.ChannelId = Convert.ToInt64(_config[$"{configSurvey.Path}:channelId"]);
+                survey.Color1 = Convert.ToInt32(_config[$"{configSurvey.Path}:color1"]);
+                survey.Color2 = Convert.ToInt32(_config[$"{configSurvey.Path}:color2"]);
+                survey.Color3 = Convert.ToInt32(_config[$"{configSurvey.Path}:color3"]);
+                survey.Count = Convert.ToString(_config[$"{configSurvey.Path}:count"]);
+                survey.Desc = Convert.ToString(_config[$"{configSurvey.Path}:desc"]);
+                survey.Enabled = Convert.ToBoolean(_config[$"{configSurvey.Path}:enabled"]);
+                survey.GuildId = Convert.ToInt64(_config[$"{configSurvey.Path}:guildId"]);
+                survey.Msg = Convert.ToString(_config[$"{configSurvey.Path}:msg"]);
+                survey.Name = configSurvey.Key;
+                survey.ResponseMsg = Convert.ToString(_config[$"{configSurvey.Path}:responsemsg"]);
+                survey.Title = Convert.ToString(_config[$"{configSurvey.Path}:title"]);
+                survey.TitleYes = Convert.ToString(_config[$"{configSurvey.Path}:yestitle"]);
+                survey.TitleNo = Convert.ToString(_config[$"{configSurvey.Path}:notitle"]);
+                survey.TitleMaybe = Convert.ToString(_config[$"{configSurvey.Path}:maybetitle"]);
+                survey.TitleTotal = Convert.ToString(_config[$"{configSurvey.Path}:totaltitle"]);
+
+                if(!_surveys.Contains(survey))
+                {
+                    _surveys.Add(survey);
+                }
+            }
+        }
+
+        public async Task<List<Embed>> GetAsync(string Survey)
         {
             List<Embed> embeds = new List<Embed>();
-            Embed embed = await GetEmbedAsync();
+            Embed embed = await GetEmbedAsync(Survey);
             embeds.Add(embed);
             return embeds;
         }
 
 
-        public async Task<List<Embed>> AddAttendanceAsync(string Player, AttendanceResponseType Response)
+        public async Task<List<Embed>> AddResponseAsync(string Survey, string Player, SurveyResponseType Response)
         {
 
             List<Embed> embeds = new List<Embed>();
+            Survey survey = null;
 
-            string prevResponse = await CheckIfPlayerResponded(Player);
+            //find the survey
+            foreach ( var _survey in _surveys)
+            {
+                if(Survey.ToLower() == _survey.Name)
+                {
+                    survey = _survey;
+                }
+            }
+
+            string prevResponse = await CheckIfPlayerResponded(Player, survey.Responses);
 
             //No previous response - add new response
             if (prevResponse == "")
             {
                 switch (Response)
                 {
-                    case AttendanceResponseType.Yes:
-                        dictFortRespYes.Add(Player, "yes");
+                    case SurveyResponseType.Yes:
+                        survey.Responses.Add(Player, "yes");
                         break;
 
-                    case AttendanceResponseType.No:
-                        dictFortRespNo.Add(Player, "no");
+                    case SurveyResponseType.No:
+                        survey.Responses.Add(Player, "no");
                         break;
 
-                    case AttendanceResponseType.Maybe:
-                        dictFortRespMaybe.Add(Player, "maybe");
+                    case SurveyResponseType.Maybe:
+                        survey.Responses.Add(Player, "maybe");
                         break;
                 }
             }
@@ -79,30 +121,30 @@ namespace Luci.Services
                 switch (prevResponse)
                 {
                     case "yes":
-                        dictFortRespYes.Remove(Player);
+                        survey.Responses.Remove(Player);
                         break;
 
                     case "no":
-                        dictFortRespNo.Remove(Player);
+                        survey.Responses.Remove(Player);
                         break;
 
                     case "maybe":
-                        dictFortRespMaybe.Remove(Player);
+                        survey.Responses.Remove(Player);
                         break;
                 }
 
                 switch (Response)
                 {
-                    case AttendanceResponseType.Yes:
-                        dictFortRespYes.Add(Player, "yes");
+                    case SurveyResponseType.Yes:
+                        survey.Responses.Add(Player, "yes");
                         break;
 
-                    case AttendanceResponseType.No:
-                        dictFortRespNo.Add(Player, "no");
+                    case SurveyResponseType.No:
+                        survey.Responses.Add(Player, "no");
                         break;
 
-                    case AttendanceResponseType.Maybe:
-                        dictFortRespMaybe.Add(Player, "maybe");
+                    case SurveyResponseType.Maybe:
+                        survey.Responses.Add(Player, "maybe");
                         break;
                 }
 
@@ -119,7 +161,7 @@ namespace Luci.Services
             }
 
             bool result = await SaveFileAsync();
-            Embed embed = await GetEmbedAsync();
+            Embed embed = await GetEmbedAsync(survey.Name);
 
             embeds.Add(embed);
 
@@ -127,11 +169,21 @@ namespace Luci.Services
         }
 
 
-        public async Task<List<Embed>> ClearAsync()
+        public async Task<List<Embed>> ClearAsync(string Survey)
         {
-            dictFortRespMaybe.Clear();
-            dictFortRespNo.Clear();
-            dictFortRespYes.Clear();
+            Survey survey = new Models.Survey();
+            //find the survey
+            foreach (var _survey in _surveys)
+            {
+                if (Survey.ToLower() == _survey.Name)
+                {
+                    _survey.Responses.Clear();
+                    survey = survey;
+                }
+            }
+
+
+            
 
             List<Embed> embeds = new List<Embed>();
 
@@ -146,7 +198,7 @@ namespace Luci.Services
             embeds.Add(alert);
 
 
-            Embed embed = await GetEmbedAsync();
+            Embed embed = await GetEmbedAsync(survey.Name);
             embeds.Add(embed);
 
 
@@ -155,21 +207,13 @@ namespace Luci.Services
         }
 
 
-        public async Task<string> CheckIfPlayerResponded(string Player)
+        public async Task<string> CheckIfPlayerResponded(string Player, SortedDictionary<string, string> Responses)
         {
             string response = "";
 
-            if (dictFortRespYes.ContainsKey(Player))
+            if (Responses.ContainsKey(Player))
             {
-                response = dictFortRespYes[Player];
-            }
-            else if (dictFortRespNo.ContainsKey(Player))
-            {
-                response = dictFortRespNo[Player];
-            }
-            else if (dictFortRespMaybe.ContainsKey(Player))
-            {
-                response = dictFortRespMaybe[Player];
+                response = Responses[Player];
             }
 
             return response;
@@ -193,33 +237,41 @@ namespace Luci.Services
 
 
 
-        public async Task<Embed> GetEmbedAsync()
+        public async Task<Embed> GetEmbedAsync(string Survey)
         {
             try
             {
+                Survey survey = new Models.Survey();
+                //find the survey
+                foreach (var _survey in _surveys)
+                {
+                    if (Survey.ToLower() == _survey.Name)
+                    {
+                        survey = _survey;
+                    }
+                }
 
                 //Setup variables
-                string formatFort = _config["fort:formats:embed"];
                 int daysRemaining = await DaysRemainingTillFortSiege();
                 int responseCounter = 0;
 
                 // Setup embeded card
                 EmbedBuilder builder = new EmbedBuilder()
                 {
-                    Color = new Color(0, 255, 33),
-                    Description = _config["fort:attendance:desc"],
-                    Title = $"{_config["fort:attendance:title"]} - ({daysRemaining} days)"
+                    Color = new Color(survey.Color1, survey.Color2, survey.Color3),
+                    Description = survey.Desc,
+                    Title = $"{survey.Title} - ({daysRemaining} days)"
                 };
 
 
                 //LOOP through YES responses in dictionary
-                foreach (string key in dictFortRespYes.Keys)
+                foreach (string key in survey.Responses.Keys)
                 {
-                    if (dictFortRespYes.Count != 0)
+                    if (survey.Responses.Count != 0 && survey.Responses[key] == "yes")
                     {
                         //Build a string of names
                         string embedVal = "";
-                        foreach (KeyValuePair<string, string> response in dictFortRespYes)
+                        foreach (KeyValuePair<string, string> response in survey.Responses)
                         {
                             responseCounter++;
                             embedVal += $"{response.Key}\r\n";
@@ -227,7 +279,7 @@ namespace Luci.Services
                         //Add fields to embed card for the bounty
                         builder.AddField(x =>
                         {
-                            x.Name = _config["fort:attendance:yestitle"];
+                            x.Name = survey.TitleYes;
                             x.Value = $"\r\n{embedVal}\r\n";
                             x.IsInline = false;
                         });
@@ -238,41 +290,15 @@ namespace Luci.Services
 
                 }
 
-                //LOOP through NO responses in dictionary
-                foreach (string key in dictFortRespNo.Keys)
+
+                //LOOP through YES responses in dictionary
+                foreach (string key in survey.Responses.Keys)
                 {
-                    if (dictFortRespNo.Count != 0)
+                    if (survey.Responses.Count != 0 && survey.Responses[key] == "no")
                     {
                         //Build a string of names
                         string embedVal = "";
-                        foreach (KeyValuePair<string, string> response in dictFortRespNo)
-                        {
-                            responseCounter++;
-
-                            embedVal += $"{response.Key}\r\n";
-                        }
-                        //Add fields to embed card for the bounty
-                        builder.AddField(x =>
-                        {
-                            x.Name = _config["fort:attendance:notitle"];
-                            x.Value = embedVal;
-                            x.IsInline = false;
-                        });
-
-                        break;
-                    }
-
-                }
-
-                //LOOP through MAYBE responses in dictionary
-                foreach (string key in dictFortRespMaybe.Keys)
-                {
-
-                    if (dictFortRespMaybe.Count != 0)
-                    {
-                        //Build a string of names
-                        string embedVal = "";
-                        foreach (KeyValuePair<string, string> response in dictFortRespMaybe)
+                        foreach (KeyValuePair<string, string> response in survey.Responses)
                         {
                             responseCounter++;
                             embedVal += $"{response.Key}\r\n";
@@ -280,22 +306,51 @@ namespace Luci.Services
                         //Add fields to embed card for the bounty
                         builder.AddField(x =>
                         {
-                            x.Name = _config["fort:attendance:maybetitle"];
-                            x.Value = embedVal;
+                            x.Name = survey.TitleNo;
+                            x.Value = $"\r\n{embedVal}\r\n";
                             x.IsInline = false;
                         });
 
                         break;
+
                     }
 
                 }
+
+
+                //LOOP through YES responses in dictionary
+                foreach (string key in survey.Responses.Keys)
+                {
+                    if (survey.Responses.Count != 0 && survey.Responses[key] == "Maybe")
+                    {
+                        //Build a string of names
+                        string embedVal = "";
+                        foreach (KeyValuePair<string, string> response in survey.Responses)
+                        {
+                            responseCounter++;
+                            embedVal += $"{response.Key}\r\n";
+                        }
+                        //Add fields to embed card for the bounty
+                        builder.AddField(x =>
+                        {
+                            x.Name = survey.TitleMaybe;
+                            x.Value = $"\r\n{embedVal}\r\n";
+                            x.IsInline = false;
+                        });
+
+                        break;
+
+                    }
+
+                }
+
 
 
                 //Add fields to embed card for the bounty
                 builder.AddField(x =>
                 {
-                    x.Name = string.Format(_config["fort:attendance:totaltitle"]);
-                    x.Value = string.Format(_config["fort:attendance:count"], responseCounter);
+                    x.Name = survey.TitleTotal;
+                    x.Value = string.Format(survey.Count, responseCounter);
                     x.IsInline = false;
                 });
                 return builder.Build();
@@ -311,66 +366,42 @@ namespace Luci.Services
 
         public async Task<bool> SaveFileAsync()
         {
-
-
-            string yesfilename = _config["data:fortyesfile"];
-            string nofilename = _config["data:fortnofile"];
-            string maybefilename = _config["data:fortmaybefile"];
+            
+            string filename = _config["data:surveyfile"];
             string filedir = _config["data:datadir"];
             bool success = false;
 
             try
             {
 
-                string jsonyes = JsonConvert.SerializeObject(dictFortRespYes);
-                string jsonno = JsonConvert.SerializeObject(dictFortRespNo);
-                string jsonmaybe = JsonConvert.SerializeObject(dictFortRespMaybe);
-
+                string jsonSurvey = JsonConvert.SerializeObject(_surveys);
+                
                 if (!Directory.Exists(filedir))     // Create the data directory if it doesn't exist
                 {
                     Directory.CreateDirectory(filedir);
                 }
 
-                if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
                 {
-                    File.Create(yesfilename).Dispose();
+                    File.Create(filename).Dispose();
                 }
-
-                if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
-                {
-                    File.Create(nofilename).Dispose();
-                }
-
-                if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
-                {
-                    File.Create(maybefilename).Dispose();
-                }
+                
 
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
                 serializer.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{yesfilename}"))
+                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    serializer.Serialize(writer, dictFortRespYes);
-                }
-                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{nofilename}"))
-                using (JsonWriter writer = new JsonTextWriter(sw))
-                {
-                    serializer.Serialize(writer, dictFortRespNo);
-                }
-                using (StreamWriter sw = new StreamWriter($"{AppContext.BaseDirectory}\\{filedir}\\{maybefilename}"))
-                using (JsonWriter writer = new JsonTextWriter(sw))
-                {
-                    serializer.Serialize(writer, dictFortRespMaybe);
+                    serializer.Serialize(writer, _surveys);
                 }
 
                 success = true;
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync("****************** ERROR SAVING BOUNTY LIST JSON\r\n" + ex.ToString());
+                await Console.Out.WriteLineAsync("****************** ERROR SAVING SURVEY LIST JSON\r\n" + ex.ToString());
             }
             return success;
         }
@@ -378,9 +409,7 @@ namespace Luci.Services
 
         public async Task LoadFileAsync()
         {
-            string yesfilename = _config["data:fortyesfile"];
-            string nofilename = _config["data:fortnofile"];
-            string maybefilename = _config["data:fortmaybefile"];
+            string filename = _config["data:surveyfile"];
             string filedir = _config["data:datadir"];
 
             Dictionary<string, Bounty> bountyList = new Dictionary<string, Bounty>();
@@ -393,42 +422,23 @@ namespace Luci.Services
                     Directory.CreateDirectory(filedir);
                 }
 
-                if (!File.Exists(yesfilename))               // Create bountylist file if it doesn't exist
+                if (!File.Exists(filename))               // Create bountylist file if it doesn't exist
                 {
-                    File.Create(yesfilename).Dispose();
+                    File.Create(filename).Dispose();
                 }
-
-                if (!File.Exists(nofilename))               // Create bountylist file if it doesn't exist
-                {
-                    File.Create(nofilename).Dispose();
-                }
-
-                if (!File.Exists(maybefilename))               // Create bountylist file if it doesn't exist
-                {
-                    File.Create(maybefilename).Dispose();
-                }
+                
 
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new JavaScriptDateTimeConverter());
                 serializer.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{yesfilename}"))
+                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{filename}"))
                 using (JsonReader reader = new JsonTextReader(sw))
                 {
-                    dictFortRespYes = serializer.Deserialize<SortedDictionary<string, string>>(reader);
-                }
-                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{nofilename}"))
-                using (JsonReader reader = new JsonTextReader(sw))
-                {
-                    dictFortRespNo = serializer.Deserialize<SortedDictionary<string, string>>(reader);
-                }
-                using (StreamReader sw = new StreamReader($"{AppContext.BaseDirectory}\\{filedir}\\{maybefilename}"))
-                using (JsonReader reader = new JsonTextReader(sw))
-                {
-                    dictFortRespMaybe = serializer.Deserialize<SortedDictionary<string, string>>(reader);
+                    _surveys = serializer.Deserialize<List<Survey>>(reader);
                 }
 
-                await Console.Out.WriteLineAsync($"*** LOADED FORTFILE from {filedir}\\{yesfilename}");
+                await Console.Out.WriteLineAsync($"*** LOADED FORTFILE from {filedir}\\{filename}");
             }
             catch (Exception ex)
             {

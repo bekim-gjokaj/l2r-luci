@@ -5,9 +5,9 @@
   "data": {
     "datadir": "data",
     "bountyfile": "bountylist.json",
-    "fortyesfile": "fortyes.json",
-    "fortnofile": "fortno.json",
-    "fortmaybefile": "fortmaybe.json",
+    "surveyyesfile": "surveyyes.json",
+    "surveynofile": "surveyno.json",
+    "surveymaybefile": "surveymaybe.json",
     "killfile": "killlist.json"
 
   },
@@ -15,11 +15,11 @@
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
-  "fort": {
+  "survey": {
     "enabled" :  true,
     "attendance": {
-      "msg": "Alright, ROLL CALL @everyone! Who's coming to fort this week? Please respond with '**!fort yes**', '**!fort no**', or '**!fort maybe**' and your attendance will be marked.",
-      "channel": "fortress-siege",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to survey this week? Please respond with '**!survey yes**', '**!survey no**', or '**!survey maybe**' and your attendance will be marked.",
+      "channel": "survey-siege",
       "response": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":european_castle:    **FORT ATTENDANCE LIST**   :european_castle: ",

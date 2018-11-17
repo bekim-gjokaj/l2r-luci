@@ -634,7 +634,7 @@ namespace Luci
                 List<Embed> embeds = await GetEmbedAsync(killList);
 
 
-                ulong guildId = Convert.ToUInt64(_config["fort:attendance:guildid"]);
+                ulong guildId = Convert.ToUInt64(_config["survey:attendance:guildid"]);
                 ulong channelId = Convert.ToUInt64(_config["kills:channelid"]);
                 await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync("", false, embeds[0]);
             }
@@ -656,7 +656,7 @@ namespace Luci
             //            killItem.Clan2,
             //            (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
             //            DateTime.Now);
-            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
+            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["survey:attendance:msg"]);
             //}
         }
         public async Task NotifyKill(PacketPlayerKillNotify kill)
@@ -673,7 +673,7 @@ namespace Luci
                 List<Embed> embeds = await GetEmbedAsync(killList);
 
 
-                ulong guildId = Convert.ToUInt64(_config["fort:attendance:guildid"]);
+                ulong guildId = Convert.ToUInt64(_config["survey:attendance:guildid"]);
                 ulong channelId = Convert.ToUInt64(_config["kills:channelid"]);
                 await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync("", false, embeds[0]);
             }
@@ -695,7 +695,7 @@ namespace Luci
             //            killItem.Clan2,
             //            (killItem.Clan2KillCount < 0) ? Convert.ToString(killItem.Clan2KillCount) : "+" + killItem.Clan2KillCount,
             //            DateTime.Now);
-            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["fort:attendance:msg"]);
+            //    _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(_config["survey:attendance:msg"]);
             //}
         }
 
