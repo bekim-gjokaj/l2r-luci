@@ -58,7 +58,7 @@ namespace Luci.Services
             }
         }
 
-        public async Task<List<Embed>> GetAsync(string Survey)
+        public async Task<List<Embed>> GetSurveyEmbedAsync(string Survey)
         {
             List<Embed> embeds = new List<Embed>();
             Embed embed = await GetEmbedAsync(Survey);
@@ -66,26 +66,63 @@ namespace Luci.Services
             return embeds;
         }
 
+        public async Task<Survey> GetSurvey(string Survey)
+        {
+            //find the survey
+            foreach (var _survey in _surveys)
+            {
+                if (Survey.ToLower() == _survey.Name)
+                {
+                    return _survey;
+                }
+            }
+
+            return null;
+        }
+
+
+        public async Task<string> GetSurveyStringList()
+        {
+            string surveylist = "";
+            //find the survey
+            foreach (var _survey in _surveys)
+            {
+
+                surveylist += $"{_survey.Name}\r\n";
+                    
+            }
+
+            return surveylist;
+        }
+
+        public async Task<bool> UpdateSurvey(Survey Survey)
+        {
+            //find the survey
+            foreach (var _survey in _surveys)
+            {
+                if (Survey.Name.ToLower() == _survey.Name)
+                {
+                    _survey.Responses = Survey.Responses;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
 
         public async Task<List<Embed>> AddResponseAsync(string Survey, string Player, SurveyResponseType Response)
         {
 
             List<Embed> embeds = new List<Embed>();
-            Survey survey = null;
+            Survey survey = await GetSurvey(Survey);
 
-            //find the survey
-            foreach ( var _survey in _surveys)
-            {
-                if(Survey.ToLower() == _survey.Name)
-                {
-                    survey = _survey;
-                }
-            }
+            
 
             string prevResponse = await CheckIfPlayerResponded(Player, survey.Responses);
 
             //No previous response - add new response
-            if (prevResponse == "")
+            if (prevResponse == "" || prevResponse is null)
             {
                 switch (Response)
                 {
@@ -101,6 +138,9 @@ namespace Luci.Services
                         survey.Responses.Add(Player, "maybe");
                         break;
                 }
+
+
+                var res = await UpdateSurvey(survey);
             }
             else if (Response.ToString().ToLower() == prevResponse.ToLower())
             {
@@ -148,6 +188,7 @@ namespace Luci.Services
                         break;
                 }
 
+                var res = await UpdateSurvey(survey);
                 // Setup embeded alert
                 EmbedBuilder builder = new EmbedBuilder()
                 {
@@ -160,6 +201,7 @@ namespace Luci.Services
 
             }
 
+            bool updateresult = await UpdateSurvey(survey);
             bool result = await SaveFileAsync();
             Embed embed = await GetEmbedAsync(survey.Name);
 
@@ -171,18 +213,9 @@ namespace Luci.Services
 
         public async Task<List<Embed>> ClearAsync(string Survey)
         {
-            Survey survey = new Models.Survey();
-            //find the survey
-            foreach (var _survey in _surveys)
-            {
-                if (Survey.ToLower() == _survey.Name)
-                {
-                    _survey.Responses.Clear();
-                    survey = survey;
-                }
-            }
-
-
+            Survey survey = await GetSurvey(Survey);
+            survey.Responses.Clear();
+            var response = await UpdateSurvey(survey);
             
 
             List<Embed> embeds = new List<Embed>();
@@ -241,16 +274,7 @@ namespace Luci.Services
         {
             try
             {
-                Survey survey = new Models.Survey();
-                //find the survey
-                foreach (var _survey in _surveys)
-                {
-                    if (Survey.ToLower() == _survey.Name)
-                    {
-                        survey = _survey;
-                    }
-                }
-
+                Survey survey = await GetSurvey(Survey);
                 //Setup variables
                 int daysRemaining = await DaysRemainingTillFortSiege();
                 int responseCounter = 0;
@@ -451,7 +475,7 @@ namespace Luci.Services
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync("****************** ERROR LOADING BOUNTY LIST JSON\r\n" + ex.ToString());
+                await Console.Out.WriteLineAsync("****************** ERROR LOADING SURVEY LIST JSON\r\n" + ex.ToString());
             }
 
         }

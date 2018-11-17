@@ -634,7 +634,7 @@ namespace Luci
                 List<Embed> embeds = await GetEmbedAsync(killList);
 
 
-                ulong guildId = Convert.ToUInt64(_config["survey:attendance:guildid"]);
+                ulong guildId = Convert.ToUInt64(_config["kills:guildid"]);
                 ulong channelId = Convert.ToUInt64(_config["kills:channelid"]);
                 await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync("", false, embeds[0]);
             }

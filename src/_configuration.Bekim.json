@@ -13,14 +13,14 @@
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
   "surveys": {
-    "legacyfort": {
+    "legfort": {
       "enabled": true,
       "guildId": 399608760991088654,
       "channelId": 404508579190669312,
       "color1" : 0,
       "color2" : 255,
       "color3" : 3,
-      "msg": "Alright, ROLL CALL @everyone! Who's coming to fort this week? Please respond with '**!r legfort yes**', '**!r legfort no**', or '**!r legfort yes**' and your attendance will be marked.",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to fort this week? Please respond with '**!r legfort yes**', '**!r legfort no**', or '**!r legfort maybe**' and your attendance will be marked.",
       "responsemsg": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":european_castle:    **FORT ATTENDANCE LIST**   :european_castle: ",
@@ -30,14 +30,14 @@
       "totaltitle": "Total responses:",
       "count": "{0}"
     },
-    "legacycastle": {
+    "legcastle": {
       "enabled": true,
       "guildId": 399608760991088654,
       "channelId": 404508579190669312,
       "color1" : 65,
       "color2" : 65,
       "color3" : 244,
-      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r legcastle yes**', '**!r legcastle no**', or '**!r legcastle yes**' and your attendance will be marked.",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r legcastle yes**', '**!r legcastle no**', or '**!r legcastle maybe**' and your attendance will be marked.",
       "responsemsg": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":japanese_castle:    **CASTLE ATTENDANCE LIST**   :japanese_castle: ",
@@ -54,7 +54,7 @@
       "color1": 234,
       "color2": 4,
       "color3": 4,
-      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r asccastle yes**', '**!r asccastle no**', or '**!r asccastle yes**' and your attendance will be marked.",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r asccastle yes**', '**!r asccastle no**', or '**!r asccastle maybe**' and your attendance will be marked.",
       "responsemsg": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":european_castle:    **ASCENSION CASTLE ATTENDANCE LIST**   :european_castle: ",
@@ -71,7 +71,7 @@
       "color1": 232,
       "color2": 66,
       "color3": 244,
-      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r rscastle yes**', '**!r rscastle no**', or '**!r rscastle yes**' and your attendance will be marked.",
+      "msg": "Alright, ROLL CALL @everyone! Who's coming to castle this week? Please respond with '**!r rscastle yes**', '**!r rscastle no**', or '**!r rscastle maybe**' and your attendance will be marked.",
       "responsemsg": "Ok, thanks! I recorded your answer as '{0}'. Here's the current attendance looks like:\r\n",
       "desc": "",
       "title": ":european_castle:    **ROGUESQUAD CASTLE ATTENDANCE LIST**   :european_castle: ",
@@ -80,12 +80,30 @@
       "maybetitle": "\r\n:fingers_crossed: MAYBE: \r\n",
       "totaltitle": "Total responses:",
       "count": "{0}"
+    },
+    "dagaandtyr4eva": {
+      "enabled": true,
+      "guildId": 399608760991088654,
+      "channelId": 399608760991088656,
+      "color1": 232,
+      "color2": 66,
+      "color3": 244,
+      "msg": "Alright, survey time @everyone! The question is: Are Daga Tyr in a relationship? Please respond with '**!r dagaandtyr4eva yes**', '**!r dagaandtyr4eva no**', or '**!r dagaandtyr4eva maybe**' and your answer will be marked.",
+      "responsemsg": "Ok, thanks! I recorded your answer as '{0}'. Here's the current responses:\r\n",
+      "desc": "",
+      "title": ":heart::heart:    **DAGA N TYR 4 EVA - SURVEY**   :fencer::fencer: ",
+      "yestitle": "\r\n:thumbsup: Of course: \r\n",
+      "notitle": "\r\n:thumbsdown: No, couldn't get gf either: \r\n",
+      "maybetitle": "\r\n:fingers_crossed: Hope so, otherwise... cats: \r\n",
+      "totaltitle": "Total responses:",
+      "count": "{0}"
     }
   },
   "kills": {
     "enabled": "true",
     "clanname": "Legacy",
     "channel": "pzychos-bot-test",
+    "guildid": 399608760991088654,
     "channelid": 497840559696642072,
     "formats": {
       "defeattitle": ":boom: **{0}** (K:{1}/D:-{2}) _*of*_  **{3}** (K:{4}/D:-{5}) _*killed*_  **{6}** (K:{7}/D:-{8}) _*of*_  **{9}** (K:{10}/D:-{11})",

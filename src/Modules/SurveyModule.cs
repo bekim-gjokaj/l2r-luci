@@ -24,6 +24,29 @@ namespace Luci.Modules
             _discord = discord;
         }
 
+        [Command("Survey List")]
+        [Summary("Ask Luci to list the surveys:\r\n Example: !survey list")]
+        public async Task List()
+        {
+            string list = await _survey.GetSurveyStringList();
+            await ReplyAsync("Survey list:\r\n" + list);
+        }
+
+        public async Task<IConfigurationSection> FindSurveyByName(string SurveyName)
+        {
+            IConfigurationSection configSurveys = _config.GetSection("surveys");
+
+            foreach (IConfigurationSection configSurvey in configSurveys.GetChildren())
+            {
+                if (SurveyName.ToLower() == configSurvey.Key)
+                {
+                    return configSurvey;
+                }
+            }
+
+            return null;
+        }
+
         [Command("Ask")]
         [Summary("Prompt Luci to ask a survey:\r\n Example: !ask {surveyname}")]
         public async Task Ask(string Survey)
@@ -32,19 +55,16 @@ namespace Luci.Modules
             ulong channelId = 0;
             string surveymsg = "";
 
-            IConfigurationSection configSurveys = _config.GetSection("surveys");
-
-            foreach (IConfigurationSection configSurvey in configSurveys.GetChildren())
+            IConfigurationSection configSurvey = await FindSurveyByName(Survey.ToLower());
+            if (Survey.ToLower() == configSurvey.Key)
             {
-                if (Survey.ToLower() == configSurvey.Key)
-                {
-                    ulong.TryParse(_config[$"{configSurvey.Path}:guildId"], out guildId);
-                    ulong.TryParse(_config[$"{configSurvey.Path}:channelId"], out channelId);
-                    surveymsg = _config[$"{configSurvey.Path}:msg"];
-                }
+                ulong.TryParse(_config[$"{configSurvey.Path}:guildId"], out guildId);
+                ulong.TryParse(_config[$"{configSurvey.Path}:channelId"], out channelId);
+                surveymsg = _config[$"{configSurvey.Path}:msg"];
             }
 
             await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(surveymsg);
+
             //Luci will send message asking for roll call
             //ReplyAsync(_config["survey:attendance:msg"], _config["survey:attendance:channel"]);
         }
@@ -65,17 +85,6 @@ namespace Luci.Modules
         {
             //Initialize variables
             List<Embed> embeds = new List<Embed>();
-            string response = "";
-
-            IConfigurationSection configSurveys = _config.GetSection("surveys");
-
-            foreach (IConfigurationSection configSurvey in configSurveys.GetChildren())
-            {
-                if (Survey.ToLower() == configSurvey.Key)
-                {
-                    response = string.Format(_config[$"{configSurvey.Path }:responsemsg"], Response);
-                }
-            }
 
             //Check response
             switch (Response.ToLower())
@@ -110,12 +119,14 @@ namespace Luci.Modules
 
         [Command("Survey"), Priority(0), Alias("R")]
         [Summary("Respond to survey attendance")]
-        //[RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Survey(string Survey, string Response, SocketGuildUser user)
         {
             //Initialize variables
             List<Embed> embeds = new List<Embed>();
-            string response = string.Format(_config["survey:attendance:response"], Response);
+
+            IConfigurationSection configSurvey = await FindSurveyByName(Survey.ToLower());
+            string response = string.Format(_config[$"{configSurvey.Path}:responsemsg"], Response);
 
             //Check response
             switch (Response.ToLower())

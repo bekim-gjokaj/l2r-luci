@@ -63,7 +63,7 @@ namespace Luci.Services
 
                 ulong guildId = 0;
                 ulong channelId = 0;
-                ulong.TryParse(_config["fort:attendance:guildId"], out guildId);
+                ulong.TryParse(_config["kills:guildid"], out guildId);
                 ulong.TryParse(_config["kills:channelId"], out channelId);
                 uint totalCP = 0;
 
