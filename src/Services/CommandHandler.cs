@@ -181,6 +181,38 @@ namespace Luci
                         break;
                 }
             }
+            else if (msg.Content.ToLower().Contains("f legacy"))
+            {
+                Random Rnd = new Random();
+                var eb = new EmbedBuilder();
+                int selection = Rnd.Next(4);
+
+                switch (selection)
+                {
+                    case 0:
+                        eb.ImageUrl = "https://media.giphy.com/media/wZtpAJCNm9KvfHEaPc/giphy.gif";
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
+                        break;
+
+                    case 1:
+                        eb.ImageUrl = "https://media.giphy.com/media/5t4gL4G0W3qCJ7VZ8r/giphy.gif";
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
+                        break;
+
+                    case 2:
+                        eb.ImageUrl = "https://media.giphy.com/media/EQuFgzpd2IWGOFfBB7/giphy.gif";
+                        await context.Channel.SendMessageAsync("", false, eb.Build());
+                        break;
+
+                    case 3:
+                        await context.Channel.SendMessageAsync("Fuck You");
+                        break;
+
+                    case 4:
+                        await context.Channel.SendMessageAsync("yea, f legacy");
+                        break;
+                }
+            }
 
         }
 
