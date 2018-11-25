@@ -211,6 +211,10 @@ namespace Luci
                     case 4:
                         await context.Channel.SendMessageAsync("yea, f legacy");
                         break;
+
+                    case 5:
+                        await context.Channel.SendMessageAsync("That reminds me of this old saying they have in Legacy, '...Fuck you too, bitch!'.");
+                        break;
                 }
             }
 

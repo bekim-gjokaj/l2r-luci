@@ -95,7 +95,7 @@ namespace Luci.Services
             _config = config;
 
             _L2RPacketLogger.L2RPacketArrivalEvent += OnL2RPacketArrival;
-            _L2RPacketLogger.StartCapture();
+            _L2RPacketLogger.StartCapture(InitializeDevice());
         }
 
 

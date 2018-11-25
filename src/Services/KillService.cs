@@ -172,7 +172,7 @@ namespace Luci
             try
             {
                 var filtered = KillLog
-                 .OrderBy(x => x.Date)
+                 .OrderByDescending(x => x.Date)
                  .Take(5)
                  .ToList();
 
@@ -259,7 +259,7 @@ namespace Luci
             {
                 var filtered = KillLog
                  .Where(x => x.Clan1 == Name)
-                 .OrderBy(x => x.Date)
+                 .OrderByDescending(x => x.Date)
                  .Take(5)
                  .ToList();
 
@@ -288,7 +288,7 @@ namespace Luci
             {
                 var filtered = KillLog
                  .Where(x => x.Clan2 == Name)
-                 .OrderBy(x => x.Date)
+                 .OrderByDescending(x => x.Date)
                  .Take(5)
                  .ToList();
 
@@ -338,7 +338,7 @@ namespace Luci
         /// <param name="Name">The name.</param>
         /// <param name="KillType">Type of the kill.</param>
         /// <returns></returns>
-        public async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2, string Region, int Channel)
+        public async Task<KillsItem> ProcessKillAsync(string Name1, string Clan1, string Name2, string Clan2, string Region, int? Channel)
         {
             try
             {
@@ -346,8 +346,8 @@ namespace Luci
                 var result = await SaveFileAsync();
 
                 //Process Kill Counts
-                await ProcessCounts(Name1, Name2, KillCountPersonal);
-                await ProcessCounts(Clan1, Clan2, KillCountClan);
+                //await ProcessCounts(Name1, Name2, KillCountPersonal);
+                //await ProcessCounts(Clan1, Clan2, KillCountClan);
 
                 //Check bounty status
                 bool isBountyKill = false;
@@ -368,15 +368,15 @@ namespace Luci
                 }
 
 
-                var p1killcount = await GetKillCountByPlayerAsync(Name1, KillsType.Personal, 1);
+                var p1killcount = await GetKillCountByPlayerAsync(Name1, KillsType.Personal, 1) + 1;
                 var p2killcount = await GetKillCountByPlayerAsync(Name2, KillsType.Personal, 1);
-                var clan1killcount = await GetKillCountByPlayerAsync(Clan1, KillsType.Clan, 1);
-                var clan2killcount = await GetKillCountByPlayerAsync(Clan2, KillsType.Clan, 1);
+                var clan1killcount = await GetKillCountByClanAsync(Clan1, KillsType.Clan, 1) + 1;
+                var clan2killcount = await GetKillCountByClanAsync(Clan2, KillsType.Clan, 1);
 
                 var p1deathcount = await GetDeathCountByPlayerAsync(Name1, KillsType.Personal, 1);
-                var p2deathcount = await GetDeathCountByPlayerAsync(Name2, KillsType.Personal, 1);
-                var clan1deathcount = await GetDeathCountByPlayerAsync(Clan1, KillsType.Clan, 1);
-                var clan2deathcount = await GetDeathCountByPlayerAsync(Clan2, KillsType.Clan, 1);
+                var p2deathcount = await GetDeathCountByPlayerAsync(Name2, KillsType.Personal, 1) + 1;
+                var clan1deathcount = await GetDeathCountByClanAsync(Clan1, KillsType.Clan, 1);
+                var clan2deathcount = await GetDeathCountByClanAsync(Clan2, KillsType.Clan, 1) + 1;
 
                 //Create KillsItem object
                 KillsItem killItem = new KillsItem();
@@ -622,7 +622,9 @@ namespace Luci
 
         public async Task NotifyKill(PacketClanMemberKillNotify kill)
         {
-            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, Convert.ToString(kill.Region), Convert.ToInt32(kill.Channel));
+            int chan;
+            Int32.TryParse(kill.Channel, out chan);
+            KillsItem killItem = await ProcessKillAsync(kill.PlayerName, kill.ClanName, kill.Player2Name, kill.Clan2Name, Convert.ToString(kill.Region), chan);
 
             //dictRecentKills.Add(builder);
             if (killItem != null)

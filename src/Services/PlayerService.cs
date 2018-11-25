@@ -64,7 +64,7 @@ namespace Luci.Services
                 ulong guildId = 0;
                 ulong channelId = 0;
                 ulong.TryParse(_config["kills:guildid"], out guildId);
-                ulong.TryParse(_config["kills:channelId"], out channelId);
+                ulong.TryParse(_config["testchannel"], out channelId);
                 uint totalCP = 0;
 
                 string msg = $"Clan ***{claninfo.Name}*** - {claninfo.Members} Members\r\n\r\n";
