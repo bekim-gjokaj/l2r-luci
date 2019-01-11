@@ -1,6 +1,6 @@
 ﻿{
   "packets": {
-    "interface": 0
+    "interface": 1
   },
   "data": {
     "datadir": "data",
@@ -13,6 +13,10 @@
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
   },
   "testchannel":  497840559696642072,
+  "scheduler": {
+    "guildid": 399608760991088654,
+    "channelid" :  399608760991088656
+  },
   "surveys": {
     "legfort": {
       "enabled": true,

@@ -4,6 +4,8 @@ using Kamael.Packets;
 using Kamael.Packets.Clan;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -24,6 +26,7 @@ namespace Luci.Modules
             _config = config;
         }
 
+
         [Command("List")]
         [Summary("Get a list of current players")]
         public async Task List()
@@ -36,6 +39,57 @@ namespace Luci.Modules
                 foreach (Embed item in result)
                 {
                     await ReplyAsync("", false, item);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        [Command("Clan")]
+        [Summary("Get a list of current clan")]
+        public async Task Clan(string Clan)
+        {
+            try
+            {
+                List<PacketClanInfoReadResult> clans = await _Player.GetClanInfo(Clan);
+                //List<Embed> result = await _Player.GetEmbedClanAsync(Clan);
+
+
+                //foreach (Embed item in result)
+                //{
+                //    await ReplyAsync("", false, item);
+                //}
+
+
+
+                try
+                {
+                    ulong.TryParse(_config["kills:guildid"], out ulong guildId);
+                    ulong.TryParse(_config["testchannel"], out ulong channelId);
+                    uint totalCP = 0;
+
+                    foreach (var claninfo in clans)
+                    {
+                        string msg = $"Clan ***{claninfo.Name}*** - {claninfo.Members} Members\r\n\r\n";
+
+
+                        JsonSerializer serializer = new JsonSerializer();
+                        serializer.Converters.Add(new JavaScriptDateTimeConverter());
+                        serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                        string json = JsonConvert.SerializeObject(claninfo);
+
+
+                        await ReplyAsync(json);
+                    }
+                    //await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(msg);
+                }
+                catch (System.Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
                 }
 
             }

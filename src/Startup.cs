@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Kamael.Packets;
+using Luci.Jobs;
 using Luci.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -101,6 +102,7 @@ namespace Luci
                             DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
                             CaseSensitiveCommands = false       // Ignore case when executing commands
                         }))
+                        .AddSingleton(new JobAlertMessage(_config, discord))
                         .AddSingleton<StartupService>()
                         .AddSingleton<IConfiguration>(_config)
                         .AddSingleton<LoggingService>()

@@ -19,8 +19,10 @@ namespace Luci.Services
         private IConfiguration _config { get; set; }
 
         private DiscordSocketClient _discord { get; set; }
+
         //Player dictionaries
         private Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
+        private Dictionary<string, PacketClanInfoReadResult> ClanList = new Dictionary<string, PacketClanInfoReadResult>();
 
         public PlayerService(IConfiguration Config, DiscordSocketClient Discord)
         {
@@ -33,15 +35,12 @@ namespace Luci.Services
         {
             try
             {
-
-                ulong guildId = 0;
-                ulong channelId = 0;
-                ulong.TryParse(_config["fort:attendance:guildId"], out guildId);
-                ulong.TryParse(_config["kills:channelId"], out channelId);
+                ulong.TryParse(_config["fort:attendance:guildId"], out ulong guildId);
+                ulong.TryParse(_config["kills:channelId"], out ulong channelId);
                 uint totalCP = 0;
 
                 string msg = $"Clan ***{clanmembers.ClanID}*** - {clanmembers.MemberCount} Members\r\n\r\n";
-                foreach (var item in clanmembers.Members)
+                foreach (PacketClanMemberItem item in clanmembers.Members)
                 {
                     totalCP += item.PlayerCP;
                     msg += $"***{item.PlayerName}*** - CP: {item.PlayerCP} Offline Time: {item.Offline}\r\n";
@@ -55,29 +54,20 @@ namespace Luci.Services
             }
         }
 
+        public async Task< List<PacketClanInfoReadResult>> GetClanInfo (string ClanName)
+        {
+            List<PacketClanInfoReadResult> tmplist = new List<PacketClanInfoReadResult>();
+            var clans = ClanList.Where(x => x.Key == ClanName);
+            foreach(var item in clans)
+            {
+                tmplist.Add(item.Value);
+            }
+            return tmplist;
+        }
 
         public async Task NotifyClanInfoAsync(PacketClanInfoReadResult claninfo)
         {
-            try
-            {
-
-                ulong guildId = 0;
-                ulong channelId = 0;
-                ulong.TryParse(_config["kills:guildid"], out guildId);
-                ulong.TryParse(_config["testchannel"], out channelId);
-                uint totalCP = 0;
-
-                string msg = $"Clan ***{claninfo.Name}*** - {claninfo.Members} Members\r\n\r\n";
-                
-                    msg += $"***{claninfo.Adena}/{claninfo.Adena2}*** Adena- CP: {claninfo.CombatPower}/{claninfo.CombatPower2}\r\n";
-                
-                msg += $"\r\nTotal Clan CP: {totalCP}";
-                await _discord.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(msg);
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            ClanList.Add(claninfo.Name, claninfo);
         }
 
         public async Task<Dictionary<string, Player>> ListAsync()
@@ -117,8 +107,6 @@ namespace Luci.Services
         {
             try
             {
-                
-
                 PlayerList.Clear();
 
                 bool saveresult = await SaveFileAsync();
@@ -131,6 +119,7 @@ namespace Luci.Services
                 return null;
             }
         }
+
         public async Task<List<Embed>> AddAsync(string Player, string Description, string Reward, DateTime Expiration, string Type)
         {
             try
@@ -224,21 +213,22 @@ namespace Luci.Services
                         foreach (KeyValuePair<string, int> leader in leaders)
                         {
                             counter++;
-                            switch(counter)
+                            switch (counter)
                             {
                                 case 1:
                                     Playerplace = ":first_place:";
                                     break;
+
                                 case 2:
                                     Playerplace = ":second_place:";
                                     break;
+
                                 case 3:
                                     Playerplace = ":third_place:";
                                     break;
                             }
-                            Playerleaders += string.Format("{0} {1}:   {2}\r\n",Playerplace, leader.Key, leader.Value);
+                            Playerleaders += string.Format("{0} {1}:   {2}\r\n", Playerplace, leader.Key, leader.Value);
                         }
-
 
                         Playerleaders += "";
                         //Add fields to embed card for the Player

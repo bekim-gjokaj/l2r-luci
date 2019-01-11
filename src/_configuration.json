@@ -1,6 +1,6 @@
 ﻿{
   "packets": {
-    "interface": 3
+    "interface": 1
   },
   "data": {
     "datadir": "data",
@@ -11,6 +11,11 @@
   "prefix": "!",
   "tokens": {
     "discord": "NDk3ODQwOTY0Mzg0MTk0NTYx.Dpl-rw.gByZ-DXeMPmbj7yo5kNReq_2cfY"
+  },
+  "testchannel":  497840559696642072,
+  "scheduler": {
+    "guildid": 399608760991088654,
+    "channelid" :  399608760991088656
   },
   "surveys": {
     "legfort": {
@@ -104,7 +109,7 @@
     "clanname": "Legacy",
     "channel": "pzychos-bot-test",
     "guildid": 399608760991088654,
-    "channelid": 497840559696642072,
+    "channelid": 513826891103207426,
     "formats": {
       "defeattitle": ":boom: **{0}** (K:{1}/D:-{2}) _*of*_  **{3}** (K:{4}/D:-{5}) _*killed*_  **{6}** (K:{7}/D:-{8}) _*of*_  **{9}** (K:{10}/D:-{11})",
       "defeatdesc": "{0} - CH {1} - _{2}_",
